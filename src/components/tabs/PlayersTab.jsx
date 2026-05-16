@@ -1,89 +1,114 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTheme } from "../../theme.jsx";
+import { useTournamentContext } from "../../contexts/TournamentContext.jsx";
+import { useTournament } from "../../hooks/useTournament.js";
 import PlayerCard from "../shared/PlayerCard.jsx";
 import { formatChips } from "../../utils/formatters.js";
 
-export default function PlayersTab({ players, setPlayers, config }) {
+export default function PlayersTab() {
   const { t } = useTheme();
-  const [name, setName] = useState("");
+  const {
+    players,
+    config,
+    addPlayerToTournament,
+    removePlayerFromTournament,
+    updatePlayerInTournament,
+  } = useTournamentContext();
+  const { listProfiles } = useTournament();
 
-  const addPlayer = () => {
+  const [name, setName] = useState("");
+  const [profiles, setProfiles] = useState([]);
+  const [showProfilePicker, setShowProfilePicker] = useState(false);
+  const [searchFilter, setSearchFilter] = useState("");
+
+  useEffect(() => {
+    listProfiles()
+      .then(setProfiles)
+      .catch((e) => console.error("Erro ao carregar perfis:", e.message));
+  }, []);
+
+  const existingPlayerIds = new Set(players.map((p) => p.playerId));
+  const availableProfiles = profiles.filter(
+    (p) => !existingPlayerIds.has(p.id) && p.display_name.toLowerCase().includes(searchFilter.toLowerCase())
+  );
+
+  async function handleAddFromProfile(profile) {
+    try {
+      await addPlayerToTournament(profile.id, profile.display_name);
+      setShowProfilePicker(false);
+      setSearchFilter("");
+    } catch (e) {
+      console.error("Erro ao adicionar jogador:", e.message);
+    }
+  }
+
+  async function handleAddByName() {
     const trimmed = name.trim();
     if (!trimmed) return;
-    setPlayers((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        name: trimmed,
-        stack: config.startingStack,
-        addOns: 0,
-        rebuys: 0,
+    const match = profiles.find(
+      (p) => p.display_name.toLowerCase() === trimmed.toLowerCase()
+    );
+    if (match && !existingPlayerIds.has(match.id)) {
+      await handleAddFromProfile(match);
+    }
+    setName("");
+  }
+
+  const removePlayer = async (id) => {
+    try {
+      await removePlayerFromTournament(id);
+    } catch (e) {
+      console.error("Erro ao remover jogador:", e.message);
+    }
+  };
+
+  const toggleEliminated = async (id) => {
+    const target = players.find((p) => p.id === id);
+    if (!target) return;
+    if (!target.eliminated) {
+      const activeCount = players.filter((p) => !p.eliminated && p.id !== id).length;
+      await updatePlayerInTournament(id, {
+        eliminated: true,
+        place: activeCount + 1,
+        eliminatedAt: new Date().toISOString(),
+      });
+    } else {
+      await updatePlayerInTournament(id, {
         eliminated: false,
         place: null,
         eliminatedAt: null,
-      },
-    ]);
-    setName("");
+      });
+    }
   };
 
-  const removePlayer = (id) => setPlayers((prev) => prev.filter((p) => p.id !== id));
-
-  const toggleEliminated = (id) =>
-    setPlayers((prev) => {
-      const target = prev.find((p) => p.id === id);
-      if (!target) return prev;
-      if (!target.eliminated) {
-        const activeCount = prev.filter((p) => !p.eliminated && p.id !== id).length;
-        return prev.map((p) =>
-          p.id === id ? { ...p, eliminated: true, place: activeCount + 1, eliminatedAt: Date.now() } : p
-        );
-      }
-      return prev.map((p) =>
-        p.id === id ? { ...p, eliminated: false, place: null, eliminatedAt: null } : p
-      );
+  const addOn = async (id) => {
+    const p = players.find((pl) => pl.id === id);
+    if (!p) return;
+    await updatePlayerInTournament(id, {
+      addOns: p.addOns + 1,
+      stack: p.stack + config.addOnChips,
     });
+  };
 
-  const addOn = (id) =>
-    setPlayers((prev) =>
-      prev.map((p) =>
-        p.id === id ? { ...p, addOns: p.addOns + 1, stack: p.stack + config.addOnChips } : p
-      )
-    );
-
-  const rebuy = (id) =>
-    setPlayers((prev) =>
-      prev.map((p) =>
-        p.id === id ? { ...p, rebuys: p.rebuys + 1, stack: p.stack + config.rebuyChips } : p
-      )
-    );
+  const rebuy = async (id) => {
+    const p = players.find((pl) => pl.id === id);
+    if (!p) return;
+    await updatePlayerInTournament(id, {
+      rebuys: p.rebuys + 1,
+      stack: p.stack + config.rebuyChips,
+    });
+  };
 
   const activePlayers = players.filter((p) => !p.eliminated);
   const eliminatedPlayers = players.filter((p) => p.eliminated).sort((a, b) => a.place - b.place);
 
   return (
     <div>
-      <div style={{ display: "flex", gap: "10px", marginBottom: "24px" }}>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addPlayer()}
-          placeholder="Nome do jogador..."
+      <div style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
+        <button
+          onClick={() => setShowProfilePicker(!showProfilePicker)}
           style={{
             flex: 1,
-            padding: "12px 16px",
-            background: t.inputBg,
-            border: "1px solid rgba(220,38,38,0.3)",
-            borderRadius: "10px",
-            color: t.text,
-            fontSize: "14px",
-            fontFamily: "'Fira Mono', monospace",
-            outline: "none",
-          }}
-        />
-        <button
-          onClick={addPlayer}
-          style={{
             padding: "12px 24px",
             background: "linear-gradient(135deg, #dc2626, #ef4444)",
             color: "#ffffff",
@@ -96,9 +121,103 @@ export default function PlayersTab({ players, setPlayers, config }) {
             letterSpacing: "0.5px",
           }}
         >
-          + ADICIONAR
+          + ADICIONAR JOGADOR
         </button>
       </div>
+
+      {showProfilePicker && (
+        <div
+          style={{
+            background: t.containerBg,
+            border: `1px solid ${t.border}`,
+            borderRadius: "12px",
+            padding: "16px",
+            marginBottom: "20px",
+            backdropFilter: "blur(12px)",
+          }}
+        >
+          <input
+            type="text"
+            value={searchFilter}
+            onChange={(e) => setSearchFilter(e.target.value)}
+            placeholder="Buscar membro..."
+            autoFocus
+            style={{
+              width: "100%",
+              padding: "10px 14px",
+              background: t.inputBg,
+              border: "1px solid rgba(220,38,38,0.3)",
+              borderRadius: "8px",
+              color: t.text,
+              fontSize: "13px",
+              fontFamily: "'Fira Mono', monospace",
+              outline: "none",
+              boxSizing: "border-box",
+              marginBottom: "12px",
+            }}
+          />
+          {availableProfiles.length === 0 ? (
+            <div style={{ color: t.textMuted, fontSize: "12px", textAlign: "center", padding: "12px" }}>
+              {profiles.length === 0
+                ? "Nenhum membro cadastrado ainda"
+                : "Todos os membros já foram adicionados"}
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "200px", overflowY: "auto" }}>
+              {availableProfiles.map((profile) => (
+                <button
+                  key={profile.id}
+                  onClick={() => handleAddFromProfile(profile)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    padding: "10px 12px",
+                    background: t.rowBg,
+                    border: `1px solid ${t.borderSubtle}`,
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    color: t.text,
+                    fontFamily: "'Fira Mono', monospace",
+                    fontSize: "13px",
+                    textAlign: "left",
+                    width: "100%",
+                  }}
+                >
+                  {profile.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt=""
+                      style={{ width: "28px", height: "28px", borderRadius: "50%" }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: "28px",
+                        height: "28px",
+                        borderRadius: "50%",
+                        background: "linear-gradient(135deg, #dc2626, #ef4444)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "#fff",
+                        fontWeight: 800,
+                        fontSize: "12px",
+                      }}
+                    >
+                      {profile.display_name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <span style={{ fontWeight: 600 }}>{profile.display_name}</span>
+                  <span style={{ color: t.textMuted, fontSize: "11px", marginLeft: "auto" }}>
+                    {profile.email}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div style={{ display: "flex", gap: "16px", marginBottom: "20px", flexWrap: "wrap" }}>
         {[

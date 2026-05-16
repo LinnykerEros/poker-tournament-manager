@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTheme } from "../theme.jsx";
+import { useTournamentContext } from "../contexts/TournamentContext.jsx";
+import { useBroadcastSender } from "../hooks/useBroadcastChannel.js";
 import CardSuitBg from "./shared/CardSuitBg.jsx";
 import TabBtn from "./shared/TabBtn.jsx";
 import TimerTab from "./tabs/TimerTab.jsx";
@@ -7,26 +9,55 @@ import PlayersTab from "./tabs/PlayersTab.jsx";
 import RankingTab from "./tabs/RankingTab.jsx";
 import BlindsTab from "./tabs/BlindsTab.jsx";
 import ConfigTab from "./tabs/ConfigTab.jsx";
-import { DEFAULT_BLINDS, DEFAULT_PRIZE_STRUCTURE } from "../utils/constants.js";
 
 export default function PokerTournament() {
-  const { t, mode, toggle } = useTheme();
+  const { t } = useTheme();
+  const ctx = useTournamentContext();
+  const {
+    tournament,
+    players,
+    loading,
+    error,
+    config,
+    blinds,
+    prizeStructure,
+    currentLevel,
+    secondsLeft,
+    running,
+    setCurrentLevel,
+    setSecondsLeft,
+    setRunning,
+    setBlinds,
+    setConfig,
+    setPrizeStructure,
+  } = ctx;
+
   const [tab, setTab] = useState("timer");
-  const [players, setPlayers] = useState([]);
-  const [blinds, setBlinds] = useState(DEFAULT_BLINDS);
   const [fullscreen, setFullscreen] = useState(false);
-  const [config, setConfig] = useState({
-    startingStack: 10000,
-    addOnChips: 5000,
-    rebuyChips: 10000,
-    addOnCost: 20,
-    rebuyCost: 30,
-    buyIn: 50,
-  });
-  const [prizeStructure, setPrizeStructure] = useState(DEFAULT_PRIZE_STRUCTURE);
-  const [currentLevel, setCurrentLevel] = useState(0);
-  const [secondsLeft, setSecondsLeft] = useState(DEFAULT_BLINDS[0]?.duration * 60 || 0);
-  const [running, setRunning] = useState(false);
+
+  const broadcast = useBroadcastSender(tournament?.id);
+
+  const openTimerWindow = () => {
+    window.open(`/tournament/${tournament.id}/timer`, "_blank", "noopener");
+  };
+
+  // Broadcast timer state to other tabs every second
+  useEffect(() => {
+    if (!tournament?.id) return;
+    const activePlayers = players.filter((p) => !p.eliminated);
+    const totalChips = players.reduce((s, p) => s + p.stack, 0);
+    const avgStack = activePlayers.length > 0 ? Math.round(totalChips / activePlayers.length) : 0;
+    broadcast({
+      currentLevel,
+      secondsLeft,
+      running,
+      blinds,
+      playerCount: activePlayers.length,
+      avgStack,
+      totalChips,
+      name: tournament.name,
+    });
+  }, [secondsLeft, currentLevel, running, players, blinds, tournament, broadcast]);
 
   const audioCtx = useRef(null);
   const getAudioCtx = useCallback(() => {
@@ -88,49 +119,42 @@ export default function PokerTournament() {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [running, blinds, playBeep, playLevelChangeAlert]);
+  }, [running, blinds, playBeep, playLevelChangeAlert, setSecondsLeft, setCurrentLevel, setRunning]);
 
-  const themeToggle = (
-    <button
-      onClick={toggle}
-      style={{
-        position: "absolute",
-        top: "0",
-        right: "0",
-        background: "none",
-        border: "none",
-        color: t.textMuted,
-        cursor: "pointer",
-        fontSize: "16px",
-        padding: "4px 0",
-        opacity: 0.5,
-        transition: "opacity 0.2s",
-      }}
-      title={mode === "dark" ? "Modo claro" : "Modo escuro"}
-    >
-      {mode === "dark" ? "☀️" : "🌙"}
-    </button>
-  );
+  if (loading) {
+    return (
+      <div style={{ textAlign: "center", padding: "64px 0", color: t.textMuted }}>
+        <div style={{ fontSize: "40px", marginBottom: "12px" }}>🃏</div>
+        Carregando torneio...
+      </div>
+    );
+  }
+
+  if (error || !tournament) {
+    return (
+      <div style={{ textAlign: "center", padding: "64px 0", color: "#ef4444" }}>
+        <div style={{ fontSize: "40px", marginBottom: "12px" }}>⚠</div>
+        {error || "Torneio não encontrado"}
+      </div>
+    );
+  }
 
   if (fullscreen) {
     return (
       <div
         style={{
-          minHeight: "100vh",
+          position: "fixed",
+          inset: 0,
           background: t.pageBg,
           color: t.text,
           fontFamily: "'Fira Mono', 'Courier New', monospace",
-          position: "relative",
           overflow: "hidden",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          zIndex: 100,
         }}
       >
-        <link
-          href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap"
-          rel="stylesheet"
-        />
         <CardSuitBg />
         <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: "900px", padding: "20px" }}>
           <TimerTab
@@ -152,105 +176,93 @@ export default function PokerTournament() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: t.pageBg,
-        color: t.text,
-        fontFamily: "'Fira Mono', 'Courier New', monospace",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      <link
-        href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap"
-        rel="stylesheet"
-      />
-      <CardSuitBg />
-      <div style={{ position: "relative", zIndex: 1, maxWidth: "800px", margin: "0 auto", padding: "20px 16px" }}>
-        <div style={{ textAlign: "center", marginBottom: "24px", position: "relative" }}>
-          {themeToggle}
-          <img
-            src="/logo.png"
-            alt="2Z Poker"
-            style={{
-              width: "clamp(60px, 18vw, 100px)",
-              height: "auto",
-              marginBottom: "8px",
-              filter: t.logoFilter,
-            }}
+    <div>
+      <div style={{ textAlign: "center", marginBottom: "20px" }}>
+        <h2
+          style={{
+            fontSize: "18px",
+            fontWeight: 900,
+            margin: "0 0 10px",
+            color: t.text,
+          }}
+        >
+          {tournament.name}
+        </h2>
+        <button
+          onClick={openTimerWindow}
+          style={{
+            padding: "6px 16px",
+            background: t.activeBg,
+            color: t.textMuted,
+            border: `1px solid ${t.borderMedium}`,
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontSize: "11px",
+            fontWeight: 600,
+            fontFamily: "'Fira Mono', monospace",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+          }}
+        >
+          📺 ABRIR TIMER NA TV
+        </button>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          gap: "8px",
+          marginBottom: "24px",
+          justifyContent: "center",
+          flexWrap: "wrap",
+        }}
+      >
+        <TabBtn active={tab === "timer"} label="Timer" icon="⏱" onClick={() => setTab("timer")} />
+        <TabBtn active={tab === "players"} label="Jogadores" icon="👥" onClick={() => setTab("players")} />
+        <TabBtn active={tab === "ranking"} label="Ranking" icon="🏆" onClick={() => setTab("ranking")} />
+        <TabBtn active={tab === "blinds"} label="Blinds" icon="🎰" onClick={() => setTab("blinds")} />
+        <TabBtn active={tab === "config"} label="Config" icon="⚙" onClick={() => setTab("config")} />
+      </div>
+
+      <div
+        style={{
+          background: t.containerBg,
+          border: `1px solid ${t.border}`,
+          borderRadius: "16px",
+          padding: "24px",
+          backdropFilter: "blur(12px)",
+        }}
+      >
+        {tab === "timer" && (
+          <TimerTab
+            blinds={blinds}
+            players={players}
+            fullscreen={fullscreen}
+            setFullscreen={setFullscreen}
+            currentLevel={currentLevel}
+            setCurrentLevel={setCurrentLevel}
+            secondsLeft={secondsLeft}
+            setSecondsLeft={setSecondsLeft}
+            running={running}
+            setRunning={setRunning}
+            getAudioCtx={getAudioCtx}
           />
-          <h1
-            style={{
-              fontSize: "clamp(18px, 6vw, 28px)",
-              fontWeight: 900,
-              margin: 0,
-              background: "linear-gradient(135deg, #dc2626, #ef4444, #dc2626)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              letterSpacing: "clamp(1px, 0.5vw, 2px)",
-              whiteSpace: "nowrap",
-            }}
-          >
-            2Z POKER
-          </h1>
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            gap: "8px",
-            marginBottom: "24px",
-            justifyContent: "center",
-            flexWrap: "wrap",
-          }}
-        >
-          <TabBtn active={tab === "timer"} label="Timer" icon="⏱" onClick={() => setTab("timer")} />
-          <TabBtn active={tab === "players"} label="Jogadores" icon="👥" onClick={() => setTab("players")} />
-          <TabBtn active={tab === "ranking"} label="Ranking" icon="🏆" onClick={() => setTab("ranking")} />
-          <TabBtn active={tab === "blinds"} label="Blinds" icon="🎰" onClick={() => setTab("blinds")} />
-          <TabBtn active={tab === "config"} label="Config" icon="⚙" onClick={() => setTab("config")} />
-        </div>
-
-        <div
-          style={{
-            background: t.containerBg,
-            border: `1px solid ${t.border}`,
-            borderRadius: "16px",
-            padding: "24px",
-            backdropFilter: "blur(12px)",
-          }}
-        >
-          {tab === "timer" && (
-            <TimerTab
-              blinds={blinds}
-              players={players}
-              fullscreen={fullscreen}
-              setFullscreen={setFullscreen}
-              currentLevel={currentLevel}
-              setCurrentLevel={setCurrentLevel}
-              secondsLeft={secondsLeft}
-              setSecondsLeft={setSecondsLeft}
-              running={running}
-              setRunning={setRunning}
-              getAudioCtx={getAudioCtx}
-            />
-          )}
-          {tab === "players" && <PlayersTab players={players} setPlayers={setPlayers} config={config} />}
-          {tab === "ranking" && (
-            <RankingTab players={players} config={config} prizeStructure={prizeStructure} />
-          )}
-          {tab === "blinds" && <BlindsTab blinds={blinds} setBlinds={setBlinds} />}
-          {tab === "config" && (
-            <ConfigTab
-              config={config}
-              setConfig={setConfig}
-              prizeStructure={prizeStructure}
-              setPrizeStructure={setPrizeStructure}
-              players={players}
-            />
-          )}
-        </div>
+        )}
+        {tab === "players" && <PlayersTab />}
+        {tab === "ranking" && (
+          <RankingTab players={players} config={config} prizeStructure={prizeStructure} />
+        )}
+        {tab === "blinds" && <BlindsTab blinds={blinds} setBlinds={setBlinds} />}
+        {tab === "config" && (
+          <ConfigTab
+            config={config}
+            setConfig={setConfig}
+            prizeStructure={prizeStructure}
+            setPrizeStructure={setPrizeStructure}
+            players={players}
+          />
+        )}
       </div>
     </div>
   );
