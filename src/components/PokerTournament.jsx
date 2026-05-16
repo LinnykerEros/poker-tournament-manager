@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import CardSuitBg from "./shared/CardSuitBg.jsx";
 import TabBtn from "./shared/TabBtn.jsx";
 import TimerTab from "./tabs/TimerTab.jsx";
@@ -25,6 +25,68 @@ export default function PokerTournament() {
   const [currentLevel, setCurrentLevel] = useState(0);
   const [secondsLeft, setSecondsLeft] = useState(DEFAULT_BLINDS[0]?.duration * 60 || 0);
   const [running, setRunning] = useState(false);
+
+  const audioCtx = useRef(null);
+  const getAudioCtx = useCallback(() => {
+    if (!audioCtx.current)
+      audioCtx.current = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx.current;
+  }, []);
+
+  const playBeep = useCallback(
+    (freq = 880, dur = 0.15, vol = 0.3) => {
+      try {
+        const ctx = getAudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = freq;
+        osc.type = "square";
+        gain.gain.setValueAtTime(vol, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + dur);
+        osc.start();
+        osc.stop(ctx.currentTime + dur);
+      } catch (e) {}
+    },
+    [getAudioCtx]
+  );
+
+  const playLevelChangeAlert = useCallback(() => {
+    const notes = [660, 880, 1100];
+    notes.forEach((freq, i) => setTimeout(() => playBeep(freq, 0.25, 0.6), i * 300));
+    setTimeout(
+      () => notes.forEach((freq, i) => setTimeout(() => playBeep(freq, 0.25, 0.6), i * 300)),
+      1200
+    );
+  }, [playBeep]);
+
+  useEffect(() => {
+    if (!running) return;
+    const interval = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          setCurrentLevel((cl) => {
+            const next = cl + 1;
+            if (next < blinds.length) {
+              playLevelChangeAlert();
+              setSecondsLeft(blinds[next].duration * 60);
+              return next;
+            }
+            setRunning(false);
+            return cl;
+          });
+          return 0;
+        }
+        if (prev === 60) playBeep(660, 0.15, 0.4);
+        if (prev === 30) playBeep(660, 0.15, 0.4);
+        if (prev <= 10) playBeep(880, 0.12, 0.5);
+        if (prev <= 5) playBeep(1000, 0.15, 0.6);
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [running, blinds, playBeep, playLevelChangeAlert]);
 
   if (fullscreen) {
     return (
@@ -58,6 +120,7 @@ export default function PokerTournament() {
             setSecondsLeft={setSecondsLeft}
             running={running}
             setRunning={setRunning}
+            getAudioCtx={getAudioCtx}
           />
         </div>
       </div>
@@ -157,6 +220,7 @@ export default function PokerTournament() {
               setSecondsLeft={setSecondsLeft}
               running={running}
               setRunning={setRunning}
+              getAudioCtx={getAudioCtx}
             />
           )}
           {tab === "players" && <PlayersTab players={players} setPlayers={setPlayers} config={config} />}

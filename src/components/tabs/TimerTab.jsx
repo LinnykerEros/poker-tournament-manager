@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { formatTime, formatChips } from "../../utils/formatters.js";
 import { useWindowWidth } from "../../utils/hooks.js";
 import { ctrlBtn } from "../../styles/shared.js";
@@ -14,77 +14,31 @@ export default function TimerTab({
   setSecondsLeft,
   running,
   setRunning,
+  getAudioCtx,
 }) {
   const [flashColor, setFlashColor] = useState(null);
-  const intervalRef = useRef(null);
-  const audioCtx = useRef(null);
-
-  const getAudioCtx = useCallback(() => {
-    if (!audioCtx.current) audioCtx.current = new (window.AudioContext || window.webkitAudioContext)();
-    return audioCtx.current;
-  }, []);
-
-  const playBeep = useCallback(
-    (freq = 880, dur = 0.15, vol = 0.3) => {
-      try {
-        const ctx = getAudioCtx();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.frequency.value = freq;
-        osc.type = "square";
-        gain.gain.setValueAtTime(vol, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + dur);
-        osc.start();
-        osc.stop(ctx.currentTime + dur);
-      } catch (e) {}
-    },
-    [getAudioCtx]
-  );
-
-  const playLevelChangeAlert = useCallback(() => {
-    const notes = [660, 880, 1100];
-    notes.forEach((freq, i) => setTimeout(() => playBeep(freq, 0.25, 0.6), i * 300));
-    setTimeout(
-      () => notes.forEach((freq, i) => setTimeout(() => playBeep(freq, 0.25, 0.6), i * 300)),
-      1200
-    );
-    setFlashColor("rgba(212,175,55,0.4)");
-    setTimeout(() => setFlashColor(null), 600);
-    setTimeout(() => setFlashColor("rgba(212,175,55,0.3)"), 800);
-    setTimeout(() => setFlashColor(null), 1400);
-    setTimeout(() => setFlashColor("rgba(212,175,55,0.2)"), 1600);
-    setTimeout(() => setFlashColor(null), 2200);
-  }, [playBeep]);
+  const prevLevelRef = useRef(currentLevel);
 
   useEffect(() => {
-    if (running) {
-      intervalRef.current = setInterval(() => {
-        setSecondsLeft((prev) => {
-          if (prev <= 1) {
-            setCurrentLevel((cl) => {
-              const next = cl + 1;
-              if (next < blinds.length) {
-                playLevelChangeAlert();
-                setSecondsLeft(blinds[next].duration * 60);
-                return next;
-              }
-              setRunning(false);
-              return cl;
-            });
-            return 0;
-          }
-          if (prev === 60) playBeep(660, 0.15, 0.4);
-          if (prev === 30) playBeep(660, 0.15, 0.4);
-          if (prev <= 10) playBeep(880, 0.12, 0.5);
-          if (prev <= 5) playBeep(1000, 0.15, 0.6);
-          return prev - 1;
-        });
-      }, 1000);
+    if (running && prevLevelRef.current !== currentLevel) {
+      setFlashColor("rgba(212,175,55,0.4)");
+      const timers = [
+        setTimeout(() => setFlashColor(null), 600),
+        setTimeout(() => setFlashColor("rgba(212,175,55,0.3)"), 800),
+        setTimeout(() => setFlashColor(null), 1400),
+        setTimeout(() => setFlashColor("rgba(212,175,55,0.2)"), 1600),
+        setTimeout(() => setFlashColor(null), 2200),
+      ];
+      prevLevelRef.current = currentLevel;
+      return () => timers.forEach(clearTimeout);
     }
-    return () => clearInterval(intervalRef.current);
-  }, [running, blinds, playBeep, playLevelChangeAlert, setSecondsLeft, setCurrentLevel, setRunning]);
+    prevLevelRef.current = currentLevel;
+  }, [currentLevel, running]);
+
+  const toggleRunning = () => {
+    if (!running && getAudioCtx) getAudioCtx();
+    setRunning(!running);
+  };
 
   const goToLevel = (i) => {
     setCurrentLevel(i);
@@ -246,7 +200,7 @@ export default function TimerTab({
               ⏮
             </button>
             <button
-              onClick={() => setRunning(!running)}
+              onClick={toggleRunning}
               style={{
                 ...ctrlBtn,
                 width: fullscreen ? "80px" : "64px",
