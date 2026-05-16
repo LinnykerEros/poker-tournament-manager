@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useTheme } from "../../theme.jsx";
 import NumInput from "../shared/NumInput.jsx";
 import { goldBtn, thStyle, tdStyle } from "../../styles/shared.js";
 
 export default function BlindsTab({ blinds, setBlinds }) {
+  const { t } = useTheme();
   const [dragIdx, setDragIdx] = useState(null);
   const [dragOverIdx, setDragOverIdx] = useState(null);
 
@@ -125,7 +127,7 @@ export default function BlindsTab({ blinds, setBlinds }) {
           <thead>
             <tr
               style={{
-                color: "#6a6a82",
+                color: t.textMuted,
                 fontSize: "10px",
                 textTransform: "uppercase",
                 letterSpacing: "1.5px",
@@ -155,7 +157,7 @@ export default function BlindsTab({ blinds, setBlinds }) {
                       ? "rgba(96,165,250,0.15)"
                       : b.isBreak
                         ? "rgba(96,165,250,0.06)"
-                        : "rgba(255,255,255,0.03)",
+                        : t.rowBg,
                   opacity: dragIdx === i ? 0.4 : 1,
                   transition: "background 0.15s, opacity 0.15s",
                   borderTop:
@@ -185,7 +187,7 @@ export default function BlindsTab({ blinds, setBlinds }) {
                   {b.isBreak ? (
                     <span style={{ color: "#60a5fa", fontWeight: 700 }}>☕ Break</span>
                   ) : (
-                    <span style={{ color: "#d4af37", fontWeight: 700 }}>{b.level}</span>
+                    <span style={{ color: "#dc2626", fontWeight: 700 }}>{b.level}</span>
                   )}
                 </td>
                 {b.isBreak ? (
@@ -231,13 +233,13 @@ export default function BlindsTab({ blinds, setBlinds }) {
       <div
         style={{
           marginTop: "16px",
-          color: "#6a6a82",
+          color: t.textMuted,
           fontSize: "11px",
           fontFamily: "'Fira Mono', monospace",
         }}
       >
         Duração total estimada:{" "}
-        <span style={{ color: "#d4af37" }}>
+        <span style={{ color: "#dc2626" }}>
           {Math.floor(blinds.reduce((s, b) => s + b.duration, 0) / 60)}h{" "}
           {blinds.reduce((s, b) => s + b.duration, 0) % 60}min
         </span>

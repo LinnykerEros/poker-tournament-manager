@@ -1,12 +1,15 @@
+import { useTheme } from "../../theme.jsx";
+
 export default function TabBtn({ active, label, icon, onClick }) {
+  const { t } = useTheme();
   return (
     <button
       onClick={onClick}
       style={{
         padding: "10px 20px",
-        background: active ? "linear-gradient(135deg, #d4af37, #f5d76e)" : "rgba(255,255,255,0.05)",
-        color: active ? "#1a1a2e" : "#a0a0b8",
-        border: active ? "none" : "1px solid rgba(255,255,255,0.08)",
+        background: active ? "linear-gradient(135deg, #dc2626, #ef4444)" : t.activeBg,
+        color: active ? "#ffffff" : t.textInactive,
+        border: active ? "none" : `1px solid ${t.borderMedium}`,
         borderRadius: "10px",
         cursor: "pointer",
         fontFamily: "'Fira Mono', 'Courier New', monospace",

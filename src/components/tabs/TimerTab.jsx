@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
+import { useTheme } from "../../theme.jsx";
 import { formatTime, formatChips } from "../../utils/formatters.js";
 import { useWindowWidth } from "../../utils/hooks.js";
-import { ctrlBtn } from "../../styles/shared.js";
+import { getCtrlBtn } from "../../styles/shared.js";
 
 export default function TimerTab({
   blinds,
@@ -16,17 +17,19 @@ export default function TimerTab({
   setRunning,
   getAudioCtx,
 }) {
+  const { t } = useTheme();
   const [flashColor, setFlashColor] = useState(null);
   const prevLevelRef = useRef(currentLevel);
+  const ctrlBtn = getCtrlBtn(t);
 
   useEffect(() => {
     if (running && prevLevelRef.current !== currentLevel) {
-      setFlashColor("rgba(212,175,55,0.4)");
+      setFlashColor("rgba(220,38,38,0.4)");
       const timers = [
         setTimeout(() => setFlashColor(null), 600),
-        setTimeout(() => setFlashColor("rgba(212,175,55,0.3)"), 800),
+        setTimeout(() => setFlashColor("rgba(220,38,38,0.3)"), 800),
         setTimeout(() => setFlashColor(null), 1400),
-        setTimeout(() => setFlashColor("rgba(212,175,55,0.2)"), 1600),
+        setTimeout(() => setFlashColor("rgba(220,38,38,0.2)"), 1600),
         setTimeout(() => setFlashColor(null), 2200),
       ];
       prevLevelRef.current = currentLevel;
@@ -81,7 +84,7 @@ export default function TimerTab({
           <div
             style={{
               marginBottom: fullscreen ? "16px" : "8px",
-              color: "#6a6a82",
+              color: t.textMuted,
               fontSize: fullscreen ? "16px" : "11px",
               textTransform: "uppercase",
               letterSpacing: "3px",
@@ -97,7 +100,7 @@ export default function TimerTab({
                   fontSize: fullscreen ? "clamp(36px, 9vw, 64px)" : "clamp(28px, 8vw, 42px)",
                   fontWeight: 900,
                   fontFamily: "'Fira Mono', monospace",
-                  color: "#d4af37",
+                  color: "#dc2626",
                   lineHeight: 1,
                   wordBreak: "break-word",
                 }}
@@ -134,7 +137,7 @@ export default function TimerTab({
                 cy={cSize / 2}
                 r={cR}
                 fill="none"
-                stroke="rgba(255,255,255,0.05)"
+                stroke={t.circleTrack}
                 strokeWidth={fullscreen ? 10 : 6}
               />
               <circle
@@ -143,7 +146,7 @@ export default function TimerTab({
                 r={cR}
                 fill="none"
                 stroke={
-                  isCritical ? "#dc2626" : isLow ? "#ef4444" : current.isBreak ? "#60a5fa" : "#d4af37"
+                  isCritical ? "#dc2626" : isLow ? "#ef4444" : current.isBreak ? "#60a5fa" : "#dc2626"
                 }
                 strokeWidth={fullscreen ? 10 : 6}
                 strokeDasharray={`${2 * Math.PI * cR}`}
@@ -167,7 +170,7 @@ export default function TimerTab({
                   fontSize: fullscreen ? "clamp(48px, 14vw, 84px)" : "clamp(34px, 11vw, 48px)",
                   fontWeight: 900,
                   fontFamily: "'Fira Mono', monospace",
-                  color: isCritical ? "#dc2626" : isLow ? "#ef4444" : "#e8e8f0",
+                  color: isCritical ? "#dc2626" : isLow ? "#ef4444" : t.text,
                   animation: isCritical
                     ? "criticalPulse 0.5s infinite"
                     : isLow
@@ -206,8 +209,8 @@ export default function TimerTab({
                 width: fullscreen ? "80px" : "64px",
                 height: fullscreen ? "80px" : "64px",
                 fontSize: fullscreen ? "30px" : "24px",
-                background: running ? "rgba(239,68,68,0.2)" : "linear-gradient(135deg, #d4af37, #f5d76e)",
-                color: running ? "#ef4444" : "#1a1a2e",
+                background: running ? "rgba(239,68,68,0.2)" : "linear-gradient(135deg, #dc2626, #ef4444)",
+                color: running ? "#ef4444" : "#ffffff",
                 border: running ? "1px solid rgba(239,68,68,0.4)" : "none",
               }}
             >
@@ -230,9 +233,9 @@ export default function TimerTab({
               onClick={() => setFullscreen(!fullscreen)}
               style={{
                 padding: "8px 20px",
-                background: fullscreen ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.06)",
-                color: fullscreen ? "#ef4444" : "#a0a0b8",
-                border: `1px solid ${fullscreen ? "rgba(239,68,68,0.3)" : "rgba(255,255,255,0.1)"}`,
+                background: fullscreen ? "rgba(239,68,68,0.15)" : t.inputBg,
+                color: fullscreen ? "#ef4444" : t.textInactive,
+                border: `1px solid ${fullscreen ? "rgba(239,68,68,0.3)" : t.borderStrong}`,
                 borderRadius: "8px",
                 cursor: "pointer",
                 fontSize: "12px",
@@ -250,16 +253,16 @@ export default function TimerTab({
           {next && (
             <div
               style={{
-                background: "rgba(255,255,255,0.03)",
+                background: t.rowBg,
                 borderRadius: "10px",
                 padding: "12px",
                 marginBottom: "20px",
-                border: "1px solid rgba(255,255,255,0.05)",
+                border: `1px solid ${t.borderSubtle}`,
               }}
             >
               <span
                 style={{
-                  color: "#6a6a82",
+                  color: t.textMuted,
                   fontSize: fullscreen ? "13px" : "10px",
                   textTransform: "uppercase",
                   letterSpacing: "1.5px",
@@ -270,7 +273,7 @@ export default function TimerTab({
               </span>
               <span
                 style={{
-                  color: "#e8e8f0",
+                  color: t.text,
                   fontWeight: 700,
                   fontFamily: "'Fira Mono', monospace",
                   fontSize: fullscreen ? "18px" : "14px",
@@ -300,7 +303,7 @@ export default function TimerTab({
                 <div style={{ fontSize: fullscreen ? "20px" : "14px" }}>{s.icon}</div>
                 <div
                   style={{
-                    color: "#d4af37",
+                    color: "#dc2626",
                     fontSize: fullscreen ? "24px" : "18px",
                     fontWeight: 800,
                     fontFamily: "'Fira Mono', monospace",
@@ -310,7 +313,7 @@ export default function TimerTab({
                 </div>
                 <div
                   style={{
-                    color: "#6a6a82",
+                    color: t.textMuted,
                     fontSize: fullscreen ? "11px" : "9px",
                     textTransform: "uppercase",
                     letterSpacing: "1px",
@@ -342,14 +345,14 @@ export default function TimerTab({
                 width: "32px",
                 height: "32px",
                 borderRadius: "8px",
-                border: i === currentLevel ? "2px solid #d4af37" : "1px solid rgba(255,255,255,0.06)",
+                border: i === currentLevel ? "2px solid #dc2626" : `1px solid ${t.border}`,
                 background:
                   i < currentLevel
-                    ? "rgba(212,175,55,0.15)"
+                    ? "rgba(220,38,38,0.15)"
                     : i === currentLevel
-                      ? "rgba(212,175,55,0.3)"
-                      : "rgba(255,255,255,0.03)",
-                color: i === currentLevel ? "#d4af37" : "#6a6a82",
+                      ? "rgba(220,38,38,0.3)"
+                      : t.rowBg,
+                color: i === currentLevel ? "#dc2626" : t.textMuted,
                 cursor: "pointer",
                 fontSize: "11px",
                 fontWeight: 700,

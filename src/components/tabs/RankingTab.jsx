@@ -1,7 +1,9 @@
+import { useTheme } from "../../theme.jsx";
 import { PLACE_MEDALS } from "../../utils/constants.js";
 import { formatChips, formatMoney } from "../../utils/formatters.js";
 
 export default function RankingTab({ players, config, prizeStructure }) {
+  const { t } = useTheme();
   const totalBuyIns = players.length * config.buyIn;
   const totalAddOns = players.reduce((s, p) => s + p.addOns, 0) * config.addOnCost;
   const totalRebuys = players.reduce((s, p) => s + p.rebuys, 0) * config.rebuyCost;
@@ -27,8 +29,8 @@ export default function RankingTab({ players, config, prizeStructure }) {
             textAlign: "center",
             padding: "24px",
             marginBottom: "24px",
-            background: "linear-gradient(135deg, rgba(212,175,55,0.15), rgba(245,215,110,0.08))",
-            border: "2px solid rgba(212,175,55,0.4)",
+            background: "linear-gradient(135deg, rgba(220,38,38,0.15), rgba(239,68,68,0.08))",
+            border: "2px solid rgba(220,38,38,0.4)",
             borderRadius: "16px",
             animation: "champGlow 2s ease-in-out infinite alternate",
           }}
@@ -36,7 +38,7 @@ export default function RankingTab({ players, config, prizeStructure }) {
           <div style={{ fontSize: "48px", marginBottom: "8px" }}>👑</div>
           <div
             style={{
-              color: "#d4af37",
+              color: "#dc2626",
               fontSize: "12px",
               textTransform: "uppercase",
               letterSpacing: "4px",
@@ -48,7 +50,7 @@ export default function RankingTab({ players, config, prizeStructure }) {
           </div>
           <div
             style={{
-              color: "#f5d76e",
+              color: "#ef4444",
               fontSize: "clamp(20px, 6.5vw, 28px)",
               fontWeight: 900,
               fontFamily: "'Fira Mono', monospace",
@@ -77,10 +79,10 @@ export default function RankingTab({ players, config, prizeStructure }) {
             textAlign: "center",
             padding: "20px",
             marginBottom: "24px",
-            background: "rgba(96,165,250,0.08)",
-            border: "1px solid rgba(96,165,250,0.2)",
+            background: "rgba(220,38,38,0.08)",
+            border: "1px solid rgba(220,38,38,0.2)",
             borderRadius: "12px",
-            color: "#60a5fa",
+            color: "#ef4444",
             fontFamily: "'Fira Mono', monospace",
             fontSize: "13px",
           }}
@@ -90,7 +92,7 @@ export default function RankingTab({ players, config, prizeStructure }) {
       )}
 
       {players.length === 0 && (
-        <div style={{ textAlign: "center", padding: "48px 0", color: "#4a4a62" }}>
+        <div style={{ textAlign: "center", padding: "48px 0", color: t.textEmpty }}>
           <div style={{ fontSize: "48px", marginBottom: "12px" }}>🏆</div>
           <div style={{ fontFamily: "'Fira Mono', monospace", fontSize: "14px" }}>
             Adicione jogadores para ver o ranking
@@ -112,9 +114,9 @@ export default function RankingTab({ players, config, prizeStructure }) {
                 padding: "14px 16px",
                 background:
                   p.place <= 3
-                    ? `rgba(212,175,55,${0.12 - (p.place - 1) * 0.03})`
-                    : "rgba(255,255,255,0.03)",
-                border: `1px solid ${p.place <= 3 ? "rgba(212,175,55,0.2)" : "rgba(255,255,255,0.06)"}`,
+                    ? `rgba(220,38,38,${0.12 - (p.place - 1) * 0.03})`
+                    : t.rowBg,
+                border: `1px solid ${p.place <= 3 ? "rgba(220,38,38,0.2)" : t.border}`,
                 borderRadius: "12px",
               }}
             >
@@ -125,18 +127,18 @@ export default function RankingTab({ players, config, prizeStructure }) {
                   borderRadius: "50%",
                   background:
                     p.place === 1
-                      ? "linear-gradient(135deg, #d4af37, #f5d76e)"
+                      ? "linear-gradient(135deg, #dc2626, #ef4444)"
                       : p.place === 2
                         ? "linear-gradient(135deg, #9ca3af, #d1d5db)"
                         : p.place === 3
                           ? "linear-gradient(135deg, #b45309, #d97706)"
-                          : "rgba(255,255,255,0.05)",
+                          : t.activeBg,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   fontSize: p.place <= 3 ? "20px" : "13px",
                   fontWeight: 800,
-                  color: p.place <= 3 ? "#1a1a2e" : "#6a6a82",
+                  color: p.place <= 3 ? "#ffffff" : t.textMuted,
                   fontFamily: "'Fira Mono', monospace",
                   flexShrink: 0,
                 }}
@@ -146,7 +148,7 @@ export default function RankingTab({ players, config, prizeStructure }) {
               <div style={{ flex: 1 }}>
                 <div
                   style={{
-                    color: "#e8e8f0",
+                    color: t.text,
                     fontWeight: 700,
                     fontSize: "15px",
                     fontFamily: "'Fira Mono', monospace",
@@ -156,7 +158,7 @@ export default function RankingTab({ players, config, prizeStructure }) {
                 </div>
                 <div
                   style={{
-                    color: "#6a6a82",
+                    color: t.textMuted,
                     fontSize: "11px",
                     fontFamily: "'Fira Mono', monospace",
                     marginTop: "2px",
@@ -181,7 +183,7 @@ export default function RankingTab({ players, config, prizeStructure }) {
                   </div>
                   <div
                     style={{
-                      color: "#6a6a82",
+                      color: t.textMuted,
                       fontSize: "10px",
                       fontFamily: "'Fira Mono', monospace",
                     }}
@@ -194,7 +196,7 @@ export default function RankingTab({ players, config, prizeStructure }) {
           );
         })}
       </div>
-      <style>{`@keyframes champGlow { from { box-shadow: 0 0 20px rgba(212,175,55,0.1); } to { box-shadow: 0 0 40px rgba(212,175,55,0.25); } }`}</style>
+      <style>{`@keyframes champGlow { from { box-shadow: 0 0 20px rgba(220,38,38,0.1); } to { box-shadow: 0 0 40px rgba(220,38,38,0.25); } }`}</style>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 export const goldBtn = {
   padding: "10px 20px",
-  background: "linear-gradient(135deg, #d4af37, #f5d76e)",
-  color: "#1a1a2e",
+  background: "linear-gradient(135deg, #dc2626, #ef4444)",
+  color: "#ffffff",
   border: "none",
   borderRadius: "10px",
   cursor: "pointer",
@@ -11,19 +11,19 @@ export const goldBtn = {
   letterSpacing: "0.5px",
 };
 
-export const ctrlBtn = {
+export const getCtrlBtn = (t) => ({
   width: "48px",
   height: "48px",
   borderRadius: "50%",
-  background: "rgba(255,255,255,0.06)",
-  border: "1px solid rgba(255,255,255,0.1)",
-  color: "#e8e8f0",
+  background: t.inputBg,
+  border: `1px solid ${t.borderStrong}`,
+  color: t.text,
   cursor: "pointer",
   fontSize: "18px",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-};
+});
 
 export const thStyle = {
   padding: "8px 12px",

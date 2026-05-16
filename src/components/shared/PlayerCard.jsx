@@ -1,8 +1,10 @@
+import { useTheme } from "../../theme.jsx";
 import MiniBtn from "./MiniBtn.jsx";
 import { PLACE_MEDALS } from "../../utils/constants.js";
 import { formatChips } from "../../utils/formatters.js";
 
 export default function PlayerCard({ player, onRemove, onEliminate, onAddOn, onRebuy, eliminated }) {
+  const { t } = useTheme();
   return (
     <div
       style={{
@@ -10,8 +12,8 @@ export default function PlayerCard({ player, onRemove, onEliminate, onAddOn, onR
         alignItems: "center",
         gap: "12px",
         padding: "12px 16px",
-        background: eliminated ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.05)",
-        border: `1px solid ${eliminated ? "rgba(255,255,255,0.03)" : "rgba(212,175,55,0.15)"}`,
+        background: eliminated ? t.rowBg : t.activeBg,
+        border: `1px solid ${eliminated ? t.borderLight : "rgba(220,38,38,0.15)"}`,
         borderRadius: "12px",
         opacity: eliminated ? 0.5 : 1,
         flexWrap: "wrap",
@@ -22,13 +24,13 @@ export default function PlayerCard({ player, onRemove, onEliminate, onAddOn, onR
           width: "36px",
           height: "36px",
           borderRadius: "50%",
-          background: eliminated ? "rgba(255,255,255,0.05)" : "linear-gradient(135deg, #d4af37, #f5d76e)",
+          background: eliminated ? t.activeBg : "linear-gradient(135deg, #dc2626, #ef4444)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           fontWeight: 800,
           fontSize: "14px",
-          color: eliminated ? "#6a6a82" : "#1a1a2e",
+          color: eliminated ? t.textMuted : "#ffffff",
           fontFamily: "'Fira Mono', monospace",
           flexShrink: 0,
         }}
@@ -42,7 +44,7 @@ export default function PlayerCard({ player, onRemove, onEliminate, onAddOn, onR
       <div style={{ flex: 1, minWidth: "100px" }}>
         <div
           style={{
-            color: eliminated ? "#6a6a82" : "#e8e8f0",
+            color: eliminated ? t.textMuted : t.text,
             fontWeight: 700,
             fontSize: "14px",
             fontFamily: "'Fira Mono', monospace",
@@ -52,7 +54,7 @@ export default function PlayerCard({ player, onRemove, onEliminate, onAddOn, onR
           {player.name}
         </div>
         <div style={{ display: "flex", gap: "10px", marginTop: "2px", flexWrap: "wrap" }}>
-          <span style={{ color: "#d4af37", fontSize: "12px", fontFamily: "'Fira Mono', monospace" }}>
+          <span style={{ color: "#dc2626", fontSize: "12px", fontFamily: "'Fira Mono', monospace" }}>
             🪙 {formatChips(player.stack)}
           </span>
           {player.addOns > 0 && (

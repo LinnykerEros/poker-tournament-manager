@@ -1,6 +1,8 @@
 import { SUITS } from "../../utils/constants.js";
+import { useTheme } from "../../theme.jsx";
 
 export default function CardSuitBg() {
+  const { t } = useTheme();
   const suits = [];
   for (let i = 0; i < 30; i++) {
     suits.push(
@@ -12,7 +14,7 @@ export default function CardSuitBg() {
           top: `${Math.random() * 100}%`,
           fontSize: `${14 + Math.random() * 28}px`,
           opacity: 0.04 + Math.random() * 0.04,
-          color: SUITS[i % 4] === "♥" || SUITS[i % 4] === "♦" ? "#ef4444" : "#fff",
+          color: SUITS[i % 4] === "♥" || SUITS[i % 4] === "♦" ? "#ef4444" : t.suitNonRed,
           transform: `rotate(${Math.random() * 360}deg)`,
           pointerEvents: "none",
           userSelect: "none",

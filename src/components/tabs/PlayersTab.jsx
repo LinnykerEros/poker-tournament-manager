@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useTheme } from "../../theme.jsx";
 import PlayerCard from "../shared/PlayerCard.jsx";
 import { formatChips } from "../../utils/formatters.js";
 
 export default function PlayersTab({ players, setPlayers, config }) {
+  const { t } = useTheme();
   const [name, setName] = useState("");
 
   const addPlayer = () => {
@@ -70,10 +72,10 @@ export default function PlayersTab({ players, setPlayers, config }) {
           style={{
             flex: 1,
             padding: "12px 16px",
-            background: "rgba(255,255,255,0.06)",
-            border: "1px solid rgba(212,175,55,0.3)",
+            background: t.inputBg,
+            border: "1px solid rgba(220,38,38,0.3)",
             borderRadius: "10px",
-            color: "#e8e8f0",
+            color: t.text,
             fontSize: "14px",
             fontFamily: "'Fira Mono', monospace",
             outline: "none",
@@ -83,8 +85,8 @@ export default function PlayersTab({ players, setPlayers, config }) {
           onClick={addPlayer}
           style={{
             padding: "12px 24px",
-            background: "linear-gradient(135deg, #d4af37, #f5d76e)",
-            color: "#1a1a2e",
+            background: "linear-gradient(135deg, #dc2626, #ef4444)",
+            color: "#ffffff",
             border: "none",
             borderRadius: "10px",
             cursor: "pointer",
@@ -109,8 +111,8 @@ export default function PlayersTab({ players, setPlayers, config }) {
             key={s.label}
             style={{
               flex: "1 1 120px",
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.06)",
+              background: t.statBg,
+              border: `1px solid ${t.border}`,
               borderRadius: "10px",
               padding: "12px 16px",
               textAlign: "center",
@@ -119,7 +121,7 @@ export default function PlayersTab({ players, setPlayers, config }) {
             <div style={{ fontSize: "18px", marginBottom: "4px" }}>{s.icon}</div>
             <div
               style={{
-                color: "#d4af37",
+                color: "#dc2626",
                 fontSize: "20px",
                 fontWeight: 800,
                 fontFamily: "'Fira Mono', monospace",
@@ -129,7 +131,7 @@ export default function PlayersTab({ players, setPlayers, config }) {
             </div>
             <div
               style={{
-                color: "#6a6a82",
+                color: t.textMuted,
                 fontSize: "10px",
                 textTransform: "uppercase",
                 letterSpacing: "1px",
@@ -142,7 +144,7 @@ export default function PlayersTab({ players, setPlayers, config }) {
       </div>
 
       {players.length === 0 && (
-        <div style={{ textAlign: "center", padding: "48px 0", color: "#4a4a62" }}>
+        <div style={{ textAlign: "center", padding: "48px 0", color: t.textEmpty }}>
           <div style={{ fontSize: "48px", marginBottom: "12px" }}>🃏</div>
           <div style={{ fontFamily: "'Fira Mono', monospace", fontSize: "14px" }}>
             Nenhum jogador adicionado
@@ -165,7 +167,7 @@ export default function PlayersTab({ players, setPlayers, config }) {
           <>
             <div
               style={{
-                color: "#6a6a82",
+                color: t.textMuted,
                 fontSize: "11px",
                 textTransform: "uppercase",
                 letterSpacing: "2px",

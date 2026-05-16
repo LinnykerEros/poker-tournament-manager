@@ -1,9 +1,11 @@
+import { useTheme } from "../../theme.jsx";
 import NumInput from "../shared/NumInput.jsx";
 import { PLACE_MEDALS } from "../../utils/constants.js";
 import { formatMoney } from "../../utils/formatters.js";
 import { goldBtn } from "../../styles/shared.js";
 
 export default function ConfigTab({ config, setConfig, prizeStructure, setPrizeStructure, players }) {
+  const { t } = useTheme();
   const update = (field, val) =>
     setConfig((prev) => ({ ...prev, [field]: Math.max(0, Number(val) || 0) }));
   const updatePrize = (i, val) =>
@@ -48,15 +50,15 @@ export default function ConfigTab({ config, setConfig, prizeStructure, setPrizeS
           <div
             key={f.key}
             style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.06)",
+              background: t.statBg,
+              border: `1px solid ${t.border}`,
               borderRadius: "12px",
               padding: "16px",
             }}
           >
             <div
               style={{
-                color: "#6a6a82",
+                color: t.textMuted,
                 fontSize: "10px",
                 textTransform: "uppercase",
                 letterSpacing: "1.5px",
@@ -73,10 +75,10 @@ export default function ConfigTab({ config, setConfig, prizeStructure, setPrizeS
               style={{
                 width: "100%",
                 padding: "10px 12px",
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(212,175,55,0.2)",
+                background: t.inputBg,
+                border: "1px solid rgba(220,38,38,0.2)",
                 borderRadius: "8px",
-                color: "#d4af37",
+                color: "#dc2626",
                 fontSize: "18px",
                 fontWeight: 700,
                 fontFamily: "'Fira Mono', monospace",
@@ -88,7 +90,7 @@ export default function ConfigTab({ config, setConfig, prizeStructure, setPrizeS
         ))}
       </div>
 
-      <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "24px" }}>
+      <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: "24px" }}>
         <div
           style={{
             display: "flex",
@@ -102,7 +104,7 @@ export default function ConfigTab({ config, setConfig, prizeStructure, setPrizeS
           <h3
             style={{
               margin: 0,
-              color: "#d4af37",
+              color: "#dc2626",
               fontSize: "16px",
               fontFamily: "'Fira Mono', monospace",
               fontWeight: 800,
@@ -117,8 +119,8 @@ export default function ConfigTab({ config, setConfig, prizeStructure, setPrizeS
 
         <div
           style={{
-            background: "linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.05))",
-            border: "1px solid rgba(212,175,55,0.2)",
+            background: "linear-gradient(135deg, rgba(220,38,38,0.1), rgba(220,38,38,0.05))",
+            border: "1px solid rgba(220,38,38,0.2)",
             borderRadius: "12px",
             padding: "16px",
             marginBottom: "16px",
@@ -127,7 +129,7 @@ export default function ConfigTab({ config, setConfig, prizeStructure, setPrizeS
         >
           <div
             style={{
-              color: "#6a6a82",
+              color: t.textMuted,
               fontSize: "10px",
               textTransform: "uppercase",
               letterSpacing: "2px",
@@ -139,7 +141,7 @@ export default function ConfigTab({ config, setConfig, prizeStructure, setPrizeS
           </div>
           <div
             style={{
-              color: "#d4af37",
+              color: "#dc2626",
               fontSize: "clamp(22px, 7vw, 32px)",
               fontWeight: 900,
               fontFamily: "'Fira Mono', monospace",
@@ -156,13 +158,13 @@ export default function ConfigTab({ config, setConfig, prizeStructure, setPrizeS
               flexWrap: "wrap",
             }}
           >
-            <span style={{ color: "#6a6a82", fontSize: "11px", fontFamily: "'Fira Mono', monospace" }}>
+            <span style={{ color: t.textMuted, fontSize: "11px", fontFamily: "'Fira Mono', monospace" }}>
               Buy-ins: {formatMoney(totalBuyIns)}
             </span>
-            <span style={{ color: "#6a6a82", fontSize: "11px", fontFamily: "'Fira Mono', monospace" }}>
+            <span style={{ color: t.textMuted, fontSize: "11px", fontFamily: "'Fira Mono', monospace" }}>
               Add-ons: {formatMoney(totalAddOns)}
             </span>
-            <span style={{ color: "#6a6a82", fontSize: "11px", fontFamily: "'Fira Mono', monospace" }}>
+            <span style={{ color: t.textMuted, fontSize: "11px", fontFamily: "'Fira Mono', monospace" }}>
               Rebuys: {formatMoney(totalRebuys)}
             </span>
           </div>
@@ -176,8 +178,8 @@ export default function ConfigTab({ config, setConfig, prizeStructure, setPrizeS
                 display: "flex",
                 alignItems: "center",
                 gap: "12px",
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.06)",
+                background: t.rowBg,
+                border: `1px solid ${t.border}`,
                 borderRadius: "10px",
                 padding: "12px 16px",
                 flexWrap: "wrap",
@@ -188,7 +190,7 @@ export default function ConfigTab({ config, setConfig, prizeStructure, setPrizeS
               </span>
               <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "8px" }}>
                 <NumInput value={p.percent} onChange={(v) => updatePrize(i, v)} />
-                <span style={{ color: "#6a6a82", fontSize: "13px", fontFamily: "'Fira Mono', monospace" }}>
+                <span style={{ color: t.textMuted, fontSize: "13px", fontFamily: "'Fira Mono', monospace" }}>
                   %
                 </span>
               </div>

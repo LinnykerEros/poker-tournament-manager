@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTheme } from "../theme.jsx";
 import CardSuitBg from "./shared/CardSuitBg.jsx";
 import TabBtn from "./shared/TabBtn.jsx";
 import TimerTab from "./tabs/TimerTab.jsx";
@@ -9,6 +10,7 @@ import ConfigTab from "./tabs/ConfigTab.jsx";
 import { DEFAULT_BLINDS, DEFAULT_PRIZE_STRUCTURE } from "../utils/constants.js";
 
 export default function PokerTournament() {
+  const { t, mode, toggle } = useTheme();
   const [tab, setTab] = useState("timer");
   const [players, setPlayers] = useState([]);
   const [blinds, setBlinds] = useState(DEFAULT_BLINDS);
@@ -88,13 +90,35 @@ export default function PokerTournament() {
     return () => clearInterval(interval);
   }, [running, blinds, playBeep, playLevelChangeAlert]);
 
+  const themeToggle = (
+    <button
+      onClick={toggle}
+      style={{
+        position: "absolute",
+        top: "0",
+        right: "0",
+        background: "none",
+        border: "none",
+        color: t.textMuted,
+        cursor: "pointer",
+        fontSize: "16px",
+        padding: "4px 0",
+        opacity: 0.5,
+        transition: "opacity 0.2s",
+      }}
+      title={mode === "dark" ? "Modo claro" : "Modo escuro"}
+    >
+      {mode === "dark" ? "☀️" : "🌙"}
+    </button>
+  );
+
   if (fullscreen) {
     return (
       <div
         style={{
           minHeight: "100vh",
-          background: "linear-gradient(170deg, #0d0d1a 0%, #1a1a2e 40%, #16213e 100%)",
-          color: "#e8e8f0",
+          background: t.pageBg,
+          color: t.text,
           fontFamily: "'Fira Mono', 'Courier New', monospace",
           position: "relative",
           overflow: "hidden",
@@ -131,8 +155,8 @@ export default function PokerTournament() {
     <div
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(170deg, #0d0d1a 0%, #1a1a2e 40%, #16213e 100%)",
-        color: "#e8e8f0",
+        background: t.pageBg,
+        color: t.text,
         fontFamily: "'Fira Mono', 'Courier New', monospace",
         position: "relative",
         overflow: "hidden",
@@ -144,43 +168,32 @@ export default function PokerTournament() {
       />
       <CardSuitBg />
       <div style={{ position: "relative", zIndex: 1, maxWidth: "800px", margin: "0 auto", padding: "20px 16px" }}>
-        <div style={{ textAlign: "center", marginBottom: "24px" }}>
-          <div
+        <div style={{ textAlign: "center", marginBottom: "24px", position: "relative" }}>
+          {themeToggle}
+          <img
+            src="/logo.png"
+            alt="2Z Poker"
             style={{
-              fontSize: "12px",
-              color: "#d4af37",
-              letterSpacing: "6px",
-              textTransform: "uppercase",
-              marginBottom: "4px",
+              width: "clamp(60px, 18vw, 100px)",
+              height: "auto",
+              marginBottom: "8px",
+              filter: t.logoFilter,
             }}
-          >
-            ♠ ♥ ♦ ♣
-          </div>
+          />
           <h1
             style={{
               fontSize: "clamp(18px, 6vw, 28px)",
               fontWeight: 900,
               margin: 0,
-              background: "linear-gradient(135deg, #d4af37, #f5d76e, #d4af37)",
+              background: "linear-gradient(135deg, #dc2626, #ef4444, #dc2626)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               letterSpacing: "clamp(1px, 0.5vw, 2px)",
               whiteSpace: "nowrap",
             }}
           >
-            POKER TOURNAMENT
+            2Z POKER
           </h1>
-          <div
-            style={{
-              fontSize: "10px",
-              color: "#6a6a82",
-              letterSpacing: "4px",
-              textTransform: "uppercase",
-              marginTop: "4px",
-            }}
-          >
-            MANAGER
-          </div>
         </div>
 
         <div
@@ -201,8 +214,8 @@ export default function PokerTournament() {
 
         <div
           style={{
-            background: "rgba(255,255,255,0.02)",
-            border: "1px solid rgba(255,255,255,0.06)",
+            background: t.containerBg,
+            border: `1px solid ${t.border}`,
             borderRadius: "16px",
             padding: "24px",
             backdropFilter: "blur(12px)",
