@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "../theme.jsx";
 import { useTournamentContext } from "../contexts/TournamentContext.jsx";
 import { useBroadcastSender } from "../hooks/useBroadcastChannel.js";
@@ -12,6 +13,7 @@ import ConfigTab from "./tabs/ConfigTab.jsx";
 
 export default function PokerTournament() {
   const { t } = useTheme();
+  const navigate = useNavigate();
   const ctx = useTournamentContext();
   const {
     tournament,
@@ -24,12 +26,14 @@ export default function PokerTournament() {
     currentLevel,
     secondsLeft,
     running,
+    isOrganizer,
     setCurrentLevel,
     setSecondsLeft,
     setRunning,
     setBlinds,
     setConfig,
     setPrizeStructure,
+    updateTournamentField,
   } = ctx;
 
   const [tab, setTab] = useState("timer");
@@ -39,6 +43,17 @@ export default function PokerTournament() {
 
   const openTimerWindow = () => {
     window.open(`/tournament/${tournament.id}/timer`, "_blank", "noopener");
+  };
+
+  const handleFinishTournament = async () => {
+    if (!confirm("Encerrar este torneio? Essa ação não pode ser desfeita.")) return;
+    setRunning(false);
+    await updateTournamentField({
+      status: "finished",
+      timer_running: false,
+      finished_at: new Date().toISOString(),
+    });
+    navigate("/");
   };
 
   // Broadcast timer state to other tabs every second
@@ -169,6 +184,7 @@ export default function PokerTournament() {
             running={running}
             setRunning={setRunning}
             getAudioCtx={getAudioCtx}
+            readOnly={!isOrganizer}
           />
         </div>
       </div>
@@ -188,25 +204,43 @@ export default function PokerTournament() {
         >
           {tournament.name}
         </h2>
-        <button
-          onClick={openTimerWindow}
-          style={{
-            padding: "6px 16px",
-            background: t.activeBg,
-            color: t.textMuted,
-            border: `1px solid ${t.borderMedium}`,
-            borderRadius: "8px",
-            cursor: "pointer",
+        {!isOrganizer && (
+          <div style={{
+            display: "inline-block",
+            padding: "4px 12px",
+            background: "rgba(96,165,250,0.1)",
+            border: "1px solid rgba(96,165,250,0.3)",
+            borderRadius: "6px",
+            color: "#60a5fa",
             fontSize: "11px",
             fontWeight: 600,
             fontFamily: "'Fira Mono', monospace",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "6px",
-          }}
-        >
-          📺 ABRIR TIMER NA TV
-        </button>
+            marginBottom: "8px",
+          }}>
+            MODO ESPECTADOR
+          </div>
+        )}
+        {isOrganizer && (
+          <button
+            onClick={openTimerWindow}
+            style={{
+              padding: "6px 16px",
+              background: t.activeBg,
+              color: t.textMuted,
+              border: `1px solid ${t.borderMedium}`,
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontSize: "11px",
+              fontWeight: 600,
+              fontFamily: "'Fira Mono', monospace",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            📺 ABRIR TIMER NA TV
+          </button>
+        )}
       </div>
 
       <div
@@ -247,13 +281,14 @@ export default function PokerTournament() {
             running={running}
             setRunning={setRunning}
             getAudioCtx={getAudioCtx}
+            readOnly={!isOrganizer}
           />
         )}
-        {tab === "players" && <PlayersTab />}
+        {tab === "players" && <PlayersTab readOnly={!isOrganizer} />}
         {tab === "ranking" && (
           <RankingTab players={players} config={config} prizeStructure={prizeStructure} />
         )}
-        {tab === "blinds" && <BlindsTab blinds={blinds} setBlinds={setBlinds} />}
+        {tab === "blinds" && <BlindsTab blinds={blinds} setBlinds={setBlinds} readOnly={!isOrganizer} />}
         {tab === "config" && (
           <ConfigTab
             config={config}
@@ -261,9 +296,32 @@ export default function PokerTournament() {
             prizeStructure={prizeStructure}
             setPrizeStructure={setPrizeStructure}
             players={players}
+            readOnly={!isOrganizer}
           />
         )}
       </div>
+
+      {isOrganizer && tournament.status !== "finished" && (
+        <div style={{ textAlign: "center", marginTop: "24px" }}>
+          <button
+            onClick={handleFinishTournament}
+            style={{
+              padding: "10px 24px",
+              background: "rgba(239,68,68,0.1)",
+              color: "#ef4444",
+              border: "1px solid rgba(239,68,68,0.3)",
+              borderRadius: "10px",
+              cursor: "pointer",
+              fontWeight: 700,
+              fontFamily: "'Fira Mono', monospace",
+              fontSize: "12px",
+              letterSpacing: "0.5px",
+            }}
+          >
+            ENCERRAR TORNEIO
+          </button>
+        </div>
+      )}
     </div>
   );
 }

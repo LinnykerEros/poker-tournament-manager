@@ -4,7 +4,7 @@ import { PLACE_MEDALS } from "../../utils/constants.js";
 import { formatMoney } from "../../utils/formatters.js";
 import { goldBtn } from "../../styles/shared.js";
 
-export default function ConfigTab({ config, setConfig, prizeStructure, setPrizeStructure, players }) {
+export default function ConfigTab({ config, setConfig, prizeStructure, setPrizeStructure, players, readOnly = false }) {
   const { t } = useTheme();
   const update = (field, val) =>
     setConfig((prev) => ({ ...prev, [field]: Math.max(0, Number(val) || 0) }));
@@ -68,11 +68,8 @@ export default function ConfigTab({ config, setConfig, prizeStructure, setPrizeS
             >
               {f.icon} {f.label}
             </div>
-            <input
-              type="number"
-              value={config[f.key]}
-              onChange={(e) => update(f.key, e.target.value)}
-              style={{
+            {readOnly ? (
+              <div style={{
                 width: "100%",
                 padding: "10px 12px",
                 background: t.inputBg,
@@ -82,10 +79,30 @@ export default function ConfigTab({ config, setConfig, prizeStructure, setPrizeS
                 fontSize: "18px",
                 fontWeight: 700,
                 fontFamily: "'Fira Mono', monospace",
-                outline: "none",
                 boxSizing: "border-box",
-              }}
-            />
+              }}>
+                {config[f.key]}
+              </div>
+            ) : (
+              <input
+                type="number"
+                value={config[f.key]}
+                onChange={(e) => update(f.key, e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  background: t.inputBg,
+                  border: "1px solid rgba(220,38,38,0.2)",
+                  borderRadius: "8px",
+                  color: "#dc2626",
+                  fontSize: "18px",
+                  fontWeight: 700,
+                  fontFamily: "'Fira Mono', monospace",
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+            )}
           </div>
         ))}
       </div>
@@ -112,9 +129,11 @@ export default function ConfigTab({ config, setConfig, prizeStructure, setPrizeS
           >
             🏆 ESTRUTURA DE PREMIAÇÃO
           </h3>
-          <button onClick={addPrizePlace} style={{ ...goldBtn, fontSize: "11px", padding: "8px 14px" }}>
-            + LUGAR
-          </button>
+          {!readOnly && (
+            <button onClick={addPrizePlace} style={{ ...goldBtn, fontSize: "11px", padding: "8px 14px" }}>
+              + LUGAR
+            </button>
+          )}
         </div>
 
         <div
@@ -189,7 +208,11 @@ export default function ConfigTab({ config, setConfig, prizeStructure, setPrizeS
                 {i < 3 ? PLACE_MEDALS[i] : `${p.place}º`}
               </span>
               <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "8px" }}>
-                <NumInput value={p.percent} onChange={(v) => updatePrize(i, v)} />
+                {readOnly ? (
+                  <span style={{ color: "#dc2626", fontSize: "14px", fontWeight: 700, fontFamily: "'Fira Mono', monospace" }}>{p.percent}</span>
+                ) : (
+                  <NumInput value={p.percent} onChange={(v) => updatePrize(i, v)} />
+                )}
                 <span style={{ color: t.textMuted, fontSize: "13px", fontFamily: "'Fira Mono', monospace" }}>
                   %
                 </span>
@@ -206,18 +229,20 @@ export default function ConfigTab({ config, setConfig, prizeStructure, setPrizeS
               >
                 {formatMoney((totalPrizePool * p.percent) / 100)}
               </span>
-              <button
-                onClick={() => removePrizePlace(i)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "#ef4444",
-                  cursor: "pointer",
-                  fontSize: "14px",
-                }}
-              >
-                ✕
-              </button>
+              {!readOnly && (
+                <button
+                  onClick={() => removePrizePlace(i)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#ef4444",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                  }}
+                >
+                  ✕
+                </button>
+              )}
             </div>
           ))}
         </div>

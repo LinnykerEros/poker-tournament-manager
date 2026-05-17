@@ -3,7 +3,7 @@ import MiniBtn from "./MiniBtn.jsx";
 import { PLACE_MEDALS } from "../../utils/constants.js";
 import { formatChips } from "../../utils/formatters.js";
 
-export default function PlayerCard({ player, onRemove, onEliminate, onAddOn, onRebuy, eliminated }) {
+export default function PlayerCard({ player, onRemove, onEliminate, onAddOn, onRebuy, eliminated, readOnly = false }) {
   const { t } = useTheme();
   return (
     <div
@@ -81,20 +81,22 @@ export default function PlayerCard({ player, onRemove, onEliminate, onAddOn, onR
           )}
         </div>
       </div>
-      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-        {!eliminated && (
-          <>
-            <MiniBtn label="Add-on" color="#60a5fa" onClick={() => onAddOn(player.id)} />
-            <MiniBtn label="Rebuy" color="#a78bfa" onClick={() => onRebuy(player.id)} />
-          </>
-        )}
-        <MiniBtn
-          label={eliminated ? "Restaurar" : "Eliminar"}
-          color={eliminated ? "#34d399" : "#ef4444"}
-          onClick={() => onEliminate(player.id)}
-        />
-        <MiniBtn label="✕" color="#6a6a82" onClick={() => onRemove(player.id)} />
-      </div>
+      {!readOnly && (
+        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+          {!eliminated && (
+            <>
+              <MiniBtn label="Add-on" color="#60a5fa" onClick={() => onAddOn(player.id)} />
+              <MiniBtn label="Rebuy" color="#a78bfa" onClick={() => onRebuy(player.id)} />
+            </>
+          )}
+          <MiniBtn
+            label={eliminated ? "Restaurar" : "Eliminar"}
+            color={eliminated ? "#34d399" : "#ef4444"}
+            onClick={() => onEliminate(player.id)}
+          />
+          <MiniBtn label="✕" color="#6a6a82" onClick={() => onRemove(player.id)} />
+        </div>
+      )}
     </div>
   );
 }

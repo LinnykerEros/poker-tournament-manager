@@ -1,16 +1,20 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase.js";
+import { useAuth } from "../contexts/AuthContext.jsx";
 import { mapDbPlayerToLocal } from "../utils/tournamentHelpers.js";
 import { calculateDriftedSeconds } from "../utils/tournamentHelpers.js";
 
 const TournamentContext = createContext();
 
 export function TournamentProvider({ tournamentId, children }) {
+  const { session } = useAuth();
   const [tournament, setTournament] = useState(null);
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const checkpointRef = useRef(null);
+
+  const isOrganizer = !!(session?.user?.id && tournament?.organizer_id && session.user.id === tournament.organizer_id);
 
   const config = tournament?.config || {};
   const blinds = tournament?.blinds || [];
@@ -259,6 +263,7 @@ export function TournamentProvider({ tournamentId, children }) {
         currentLevel,
         secondsLeft,
         running,
+        isOrganizer,
         setConfig,
         setBlinds,
         setPrizeStructure,

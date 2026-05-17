@@ -16,6 +16,7 @@ export default function TimerTab({
   running,
   setRunning,
   getAudioCtx,
+  readOnly = false,
 }) {
   const { t } = useTheme();
   const [flashColor, setFlashColor] = useState(null);
@@ -183,50 +184,52 @@ export default function TimerTab({
             </div>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              gap: "12px",
-              marginBottom: "24px",
-              flexWrap: "wrap",
-            }}
-          >
-            <button
-              onClick={() => goToLevel(Math.max(0, currentLevel - 1))}
+          {!readOnly && (
+            <div
               style={{
-                ...ctrlBtn,
-                ...(fullscreen ? { width: "56px", height: "56px", fontSize: "22px" } : {}),
-              }}
-              disabled={currentLevel === 0}
-            >
-              ⏮
-            </button>
-            <button
-              onClick={toggleRunning}
-              style={{
-                ...ctrlBtn,
-                width: fullscreen ? "80px" : "64px",
-                height: fullscreen ? "80px" : "64px",
-                fontSize: fullscreen ? "30px" : "24px",
-                background: running ? "rgba(239,68,68,0.2)" : "linear-gradient(135deg, #dc2626, #ef4444)",
-                color: running ? "#ef4444" : "#ffffff",
-                border: running ? "1px solid rgba(239,68,68,0.4)" : "none",
+                display: "flex",
+                justifyContent: "center",
+                gap: "12px",
+                marginBottom: "24px",
+                flexWrap: "wrap",
               }}
             >
-              {running ? "⏸" : "▶"}
-            </button>
-            <button
-              onClick={() => goToLevel(Math.min(blinds.length - 1, currentLevel + 1))}
-              style={{
-                ...ctrlBtn,
-                ...(fullscreen ? { width: "56px", height: "56px", fontSize: "22px" } : {}),
-              }}
-              disabled={currentLevel >= blinds.length - 1}
-            >
-              ⏭
-            </button>
-          </div>
+              <button
+                onClick={() => goToLevel(Math.max(0, currentLevel - 1))}
+                style={{
+                  ...ctrlBtn,
+                  ...(fullscreen ? { width: "56px", height: "56px", fontSize: "22px" } : {}),
+                }}
+                disabled={currentLevel === 0}
+              >
+                ⏮
+              </button>
+              <button
+                onClick={toggleRunning}
+                style={{
+                  ...ctrlBtn,
+                  width: fullscreen ? "80px" : "64px",
+                  height: fullscreen ? "80px" : "64px",
+                  fontSize: fullscreen ? "30px" : "24px",
+                  background: running ? "rgba(239,68,68,0.2)" : "linear-gradient(135deg, #dc2626, #ef4444)",
+                  color: running ? "#ef4444" : "#ffffff",
+                  border: running ? "1px solid rgba(239,68,68,0.4)" : "none",
+                }}
+              >
+                {running ? "⏸" : "▶"}
+              </button>
+              <button
+                onClick={() => goToLevel(Math.min(blinds.length - 1, currentLevel + 1))}
+                style={{
+                  ...ctrlBtn,
+                  ...(fullscreen ? { width: "56px", height: "56px", fontSize: "22px" } : {}),
+                }}
+                disabled={currentLevel >= blinds.length - 1}
+              >
+                ⏭
+              </button>
+            </div>
+          )}
 
           <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}>
             <button
@@ -327,7 +330,7 @@ export default function TimerTab({
         </>
       )}
 
-      {!fullscreen && (
+      {!fullscreen && !readOnly && (
         <div
           style={{
             marginTop: "24px",

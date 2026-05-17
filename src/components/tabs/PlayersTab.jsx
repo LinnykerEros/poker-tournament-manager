@@ -5,7 +5,7 @@ import { useTournament } from "../../hooks/useTournament.js";
 import PlayerCard from "../shared/PlayerCard.jsx";
 import { formatChips } from "../../utils/formatters.js";
 
-export default function PlayersTab() {
+export default function PlayersTab({ readOnly = false }) {
   const { t } = useTheme();
   const {
     players,
@@ -45,13 +45,12 @@ export default function PlayersTab() {
   async function handleAddByName() {
     const trimmed = name.trim();
     if (!trimmed) return;
-    const match = profiles.find(
-      (p) => p.display_name.toLowerCase() === trimmed.toLowerCase()
-    );
-    if (match && !existingPlayerIds.has(match.id)) {
-      await handleAddFromProfile(match);
+    try {
+      await addPlayerToTournament(null, trimmed);
+      setName("");
+    } catch (e) {
+      console.error("Erro ao adicionar jogador:", e.message);
     }
-    setName("");
   }
 
   const removePlayer = async (id) => {
@@ -104,28 +103,70 @@ export default function PlayersTab() {
 
   return (
     <div>
-      <div style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
-        <button
-          onClick={() => setShowProfilePicker(!showProfilePicker)}
-          style={{
-            flex: 1,
-            padding: "12px 24px",
-            background: "linear-gradient(135deg, #dc2626, #ef4444)",
-            color: "#ffffff",
-            border: "none",
-            borderRadius: "10px",
-            cursor: "pointer",
-            fontWeight: 800,
-            fontFamily: "'Fira Mono', monospace",
-            fontSize: "13px",
-            letterSpacing: "0.5px",
-          }}
-        >
-          + ADICIONAR JOGADOR
-        </button>
-      </div>
+      {!readOnly && (
+        <div style={{ marginBottom: "16px" }}>
+          <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleAddByName()}
+              placeholder="Nome do jogador..."
+              style={{
+                flex: 1,
+                padding: "12px 16px",
+                background: t.inputBg,
+                border: "1px solid rgba(220,38,38,0.3)",
+                borderRadius: "10px",
+                color: t.text,
+                fontSize: "13px",
+                fontFamily: "'Fira Mono', monospace",
+                outline: "none",
+              }}
+            />
+            <button
+              onClick={handleAddByName}
+              disabled={!name.trim()}
+              style={{
+                padding: "12px 20px",
+                background: name.trim()
+                  ? "linear-gradient(135deg, #dc2626, #ef4444)"
+                  : "rgba(107,114,128,0.3)",
+                color: name.trim() ? "#ffffff" : "#6b7280",
+                border: "none",
+                borderRadius: "10px",
+                cursor: name.trim() ? "pointer" : "not-allowed",
+                fontWeight: 800,
+                fontFamily: "'Fira Mono', monospace",
+                fontSize: "13px",
+              }}
+            >
+              + ADICIONAR
+            </button>
+          </div>
+          <button
+            onClick={() => setShowProfilePicker(!showProfilePicker)}
+            style={{
+              padding: "8px 16px",
+              background: t.activeBg,
+              color: t.textMuted,
+              border: `1px solid ${t.borderMedium || t.border}`,
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontSize: "11px",
+              fontWeight: 600,
+              fontFamily: "'Fira Mono', monospace",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            👤 SELECIONAR MEMBRO CADASTRADO
+          </button>
+        </div>
+      )}
 
-      {showProfilePicker && (
+      {!readOnly && showProfilePicker && (
         <div
           style={{
             background: t.containerBg,
@@ -280,6 +321,7 @@ export default function PlayersTab() {
             onEliminate={toggleEliminated}
             onAddOn={addOn}
             onRebuy={rebuy}
+            readOnly={readOnly}
           />
         ))}
         {eliminatedPlayers.length > 0 && (
@@ -305,6 +347,7 @@ export default function PlayersTab() {
                 onAddOn={addOn}
                 onRebuy={rebuy}
                 eliminated
+                readOnly={readOnly}
               />
             ))}
           </>

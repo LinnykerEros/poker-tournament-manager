@@ -3,7 +3,7 @@ import { useTheme } from "../../theme.jsx";
 import NumInput from "../shared/NumInput.jsx";
 import { goldBtn, thStyle, tdStyle } from "../../styles/shared.js";
 
-export default function BlindsTab({ blinds, setBlinds }) {
+export default function BlindsTab({ blinds, setBlinds, readOnly = false }) {
   const { t } = useTheme();
   const [dragIdx, setDragIdx] = useState(null);
   const [dragOverIdx, setDragOverIdx] = useState(null);
@@ -98,22 +98,24 @@ export default function BlindsTab({ blinds, setBlinds }) {
 
   return (
     <div>
-      <div style={{ display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap" }}>
-        <button onClick={addLevel} style={goldBtn}>
-          + NÍVEL
-        </button>
-        <button
-          onClick={addBreak}
-          style={{
-            ...goldBtn,
-            background: "rgba(96,165,250,0.15)",
-            color: "#60a5fa",
-            border: "1px solid rgba(96,165,250,0.3)",
-          }}
-        >
-          ☕ INTERVALO
-        </button>
-      </div>
+      {!readOnly && (
+        <div style={{ display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap" }}>
+          <button onClick={addLevel} style={goldBtn}>
+            + NÍVEL
+          </button>
+          <button
+            onClick={addBreak}
+            style={{
+              ...goldBtn,
+              background: "rgba(96,165,250,0.15)",
+              color: "#60a5fa",
+              border: "1px solid rgba(96,165,250,0.3)",
+            }}
+          >
+            ☕ INTERVALO
+          </button>
+        </div>
+      )}
       <div style={{ overflowX: "auto" }}>
         <table
           style={{
@@ -133,13 +135,13 @@ export default function BlindsTab({ blinds, setBlinds }) {
                 letterSpacing: "1.5px",
               }}
             >
-              <th style={{ ...thStyle, width: "30px" }}></th>
+              {!readOnly && <th style={{ ...thStyle, width: "30px" }}></th>}
               <th style={thStyle}>Nível</th>
               <th style={thStyle}>Small</th>
               <th style={thStyle}>Big</th>
               <th style={thStyle}>Ante</th>
               <th style={thStyle}>Min</th>
-              <th style={thStyle}></th>
+              {!readOnly && <th style={thStyle}></th>}
             </tr>
           </thead>
           <tbody>
@@ -166,23 +168,25 @@ export default function BlindsTab({ blinds, setBlinds }) {
                       : "2px solid transparent",
                 }}
               >
-                <td style={{ ...tdStyle, width: "30px", padding: "6px 4px" }}>
-                  {b.isBreak ? (
-                    <span
-                      style={{
-                        cursor: "grab",
-                        fontSize: "16px",
-                        color: "#60a5fa",
-                        userSelect: "none",
-                      }}
-                      title="Arraste para reposicionar"
-                    >
-                      ⠿
-                    </span>
-                  ) : (
-                    <span style={{ fontSize: "16px", color: "transparent" }}>⠿</span>
-                  )}
-                </td>
+                {!readOnly && (
+                  <td style={{ ...tdStyle, width: "30px", padding: "6px 4px" }}>
+                    {b.isBreak ? (
+                      <span
+                        style={{
+                          cursor: "grab",
+                          fontSize: "16px",
+                          color: "#60a5fa",
+                          userSelect: "none",
+                        }}
+                        title="Arraste para reposicionar"
+                      >
+                        ⠿
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: "16px", color: "transparent" }}>⠿</span>
+                    )}
+                  </td>
+                )}
                 <td style={tdStyle}>
                   {b.isBreak ? (
                     <span style={{ color: "#60a5fa", fontWeight: 700 }}>☕ Break</span>
@@ -197,34 +201,36 @@ export default function BlindsTab({ blinds, setBlinds }) {
                 ) : (
                   <>
                     <td style={tdStyle}>
-                      <NumInput value={b.small} onChange={(v) => updateField(i, "small", v)} />
+                      {readOnly ? <span style={{ color: t.text }}>{b.small}</span> : <NumInput value={b.small} onChange={(v) => updateField(i, "small", v)} />}
                     </td>
                     <td style={tdStyle}>
-                      <NumInput value={b.big} onChange={(v) => updateField(i, "big", v)} />
+                      {readOnly ? <span style={{ color: t.text }}>{b.big}</span> : <NumInput value={b.big} onChange={(v) => updateField(i, "big", v)} />}
                     </td>
                     <td style={tdStyle}>
-                      <NumInput value={b.ante} onChange={(v) => updateField(i, "ante", v)} />
+                      {readOnly ? <span style={{ color: t.text }}>{b.ante}</span> : <NumInput value={b.ante} onChange={(v) => updateField(i, "ante", v)} />}
                     </td>
                   </>
                 )}
                 <td style={tdStyle}>
-                  <NumInput value={b.duration} onChange={(v) => updateField(i, "duration", v)} />
+                  {readOnly ? <span style={{ color: t.text }}>{b.duration}</span> : <NumInput value={b.duration} onChange={(v) => updateField(i, "duration", v)} />}
                 </td>
-                <td style={tdStyle}>
-                  <button
-                    onClick={() => removeLevel(i)}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      color: "#ef4444",
-                      cursor: "pointer",
-                      fontSize: "16px",
-                      padding: "4px",
-                    }}
-                  >
-                    ✕
-                  </button>
-                </td>
+                {!readOnly && (
+                  <td style={tdStyle}>
+                    <button
+                      onClick={() => removeLevel(i)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#ef4444",
+                        cursor: "pointer",
+                        fontSize: "16px",
+                        padding: "4px",
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

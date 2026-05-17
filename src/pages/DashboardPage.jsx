@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../theme.jsx";
+import { useAuth } from "../contexts/AuthContext.jsx";
 import { useTournament } from "../hooks/useTournament.js";
 
 const statusLabels = {
@@ -12,6 +13,7 @@ const statusLabels = {
 
 export default function DashboardPage() {
   const { t } = useTheme();
+  const { session } = useAuth();
   const navigate = useNavigate();
   const { listTournaments, createTournament, deleteTournament } = useTournament();
   const [tournaments, setTournaments] = useState([]);
@@ -19,6 +21,8 @@ export default function DashboardPage() {
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
   const [showForm, setShowForm] = useState(false);
+
+  const hasActiveTournament = tournaments.some((t) => ["setup", "running", "paused"].includes(t.status));
 
   useEffect(() => {
     loadList();
@@ -39,12 +43,16 @@ export default function DashboardPage() {
   async function handleCreate() {
     const trimmed = newName.trim();
     if (!trimmed) return;
+    if (hasActiveTournament) {
+      alert("Finalize o torneio em andamento antes de criar um novo.");
+      return;
+    }
     try {
       setCreating(true);
-      const t = await createTournament(trimmed);
+      const newTournament = await createTournament(trimmed);
       setNewName("");
       setShowForm(false);
-      navigate(`/tournament/${t.id}`);
+      navigate(`/tournament/${newTournament.id}`);
     } catch (e) {
       console.error("Erro ao criar torneio:", e.message);
     } finally {
@@ -99,19 +107,23 @@ export default function DashboardPage() {
           TORNEIOS
         </h2>
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => !hasActiveTournament && setShowForm(!showForm)}
           style={{
             padding: "10px 20px",
-            background: "linear-gradient(135deg, #dc2626, #ef4444)",
-            color: "#ffffff",
+            background: hasActiveTournament
+              ? "rgba(107,114,128,0.3)"
+              : "linear-gradient(135deg, #dc2626, #ef4444)",
+            color: hasActiveTournament ? "#6b7280" : "#ffffff",
             border: "none",
             borderRadius: "10px",
-            cursor: "pointer",
+            cursor: hasActiveTournament ? "not-allowed" : "pointer",
             fontWeight: 800,
             fontFamily: "'Fira Mono', monospace",
             fontSize: "12px",
             letterSpacing: "0.5px",
+            opacity: hasActiveTournament ? 0.6 : 1,
           }}
+          title={hasActiveTournament ? "Finalize o torneio ativo antes de criar outro" : ""}
         >
           + NOVO TORNEIO
         </button>
@@ -244,7 +256,7 @@ export default function DashboardPage() {
                     <span style={{ color: st.color, fontWeight: 700 }}>{st.text}</span>
                   </div>
                 </div>
-                {tour.status === "setup" && (
+                {tour.status === "setup" && tour.organizer_id === session?.user?.id && (
                   <button
                     onClick={(e) => handleDelete(tour.id, e)}
                     style={{
