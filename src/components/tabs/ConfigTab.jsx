@@ -54,6 +54,8 @@ export default function ConfigTab({ config, setConfig, prizeStructure, setPrizeS
               border: `1px solid ${t.border}`,
               borderRadius: "12px",
               padding: "16px",
+              display: "flex",
+              flexDirection: "column",
             }}
           >
             <div
@@ -64,6 +66,7 @@ export default function ConfigTab({ config, setConfig, prizeStructure, setPrizeS
                 letterSpacing: "1.5px",
                 marginBottom: "8px",
                 fontFamily: "'Fira Mono', monospace",
+                minHeight: "30px",
               }}
             >
               {f.icon} {f.label}
