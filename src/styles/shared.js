@@ -23,6 +23,9 @@ export const getCtrlBtn = (t) => ({
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
+  lineHeight: 1,
+  padding: 0,
+  fontFamily: "system-ui, sans-serif",
 });
 
 export const thStyle = {

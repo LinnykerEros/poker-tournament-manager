@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useTheme } from "../../theme.jsx";
 import { formatTime, formatChips } from "../../utils/formatters.js";
-import { useWindowWidth } from "../../utils/hooks.js";
 import { getCtrlBtn } from "../../styles/shared.js";
 
 export default function TimerTab({
@@ -59,13 +58,6 @@ export default function TimerTab({
   const isLow = secondsLeft <= 60;
   const isCritical = secondsLeft <= 10;
 
-  const windowWidth = useWindowWidth();
-  const maxCSize = fullscreen ? 320 : 200;
-  const minCSize = 160;
-  const cSize = Math.max(minCSize, Math.min(maxCSize, windowWidth - 48));
-  const strokeW = fullscreen ? 10 : 6;
-  const cR = cSize / 2 - strokeW - 4;
-
   return (
     <div style={{ textAlign: "center" }}>
       {flashColor && (
@@ -94,84 +86,48 @@ export default function TimerTab({
           >
             {current.isBreak ? "☕ Intervalo" : `Nível ${current.level}`}
           </div>
-          {!current.isBreak && (
-            <div style={{ marginBottom: fullscreen ? "24px" : "16px" }}>
-              <div
-                style={{
-                  fontSize: fullscreen ? "clamp(36px, 9vw, 64px)" : "clamp(28px, 8vw, 42px)",
-                  fontWeight: 900,
-                  fontFamily: "'Fira Mono', monospace",
-                  color: "#dc2626",
-                  lineHeight: 1,
-                  wordBreak: "break-word",
-                }}
-              >
-                {formatChips(current.small)} / {formatChips(current.big)}
-              </div>
-              {current.ante > 0 && (
-                <div
-                  style={{
-                    color: "#a78bfa",
-                    fontSize: fullscreen ? "24px" : "16px",
-                    fontWeight: 600,
-                    marginTop: "4px",
-                    fontFamily: "'Fira Mono', monospace",
-                  }}
-                >
-                  Ante: {formatChips(current.ante)}
-                </div>
-              )}
-            </div>
-          )}
 
+          {/* Barra de progresso horizontal */}
           <div
             style={{
-              position: "relative",
-              width: `${cSize}px`,
-              height: `${cSize}px`,
-              margin: `0 auto ${fullscreen ? "30px" : "20px"}`,
+              width: "100%",
+              height: fullscreen ? "10px" : "6px",
+              background: t.circleTrack,
+              borderRadius: "5px",
+              overflow: "hidden",
+              marginBottom: fullscreen ? "32px" : "20px",
             }}
           >
-            <svg width={cSize} height={cSize} viewBox={`0 0 ${cSize} ${cSize}`}>
-              <circle
-                cx={cSize / 2}
-                cy={cSize / 2}
-                r={cR}
-                fill="none"
-                stroke={t.circleTrack}
-                strokeWidth={fullscreen ? 10 : 6}
-              />
-              <circle
-                cx={cSize / 2}
-                cy={cSize / 2}
-                r={cR}
-                fill="none"
-                stroke={
-                  isCritical ? "#dc2626" : isLow ? "#ef4444" : current.isBreak ? "#60a5fa" : "#dc2626"
-                }
-                strokeWidth={fullscreen ? 10 : 6}
-                strokeDasharray={`${2 * Math.PI * cR}`}
-                strokeDashoffset={`${2 * Math.PI * cR * (1 - progress)}`}
-                strokeLinecap="round"
-                transform={`rotate(-90 ${cSize / 2} ${cSize / 2})`}
-                style={{ transition: "stroke-dashoffset 1s linear, stroke 0.3s" }}
-              />
-            </svg>
             <div
               style={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                width: `${progress * 100}%`,
+                height: "100%",
+                background: isCritical ? "#dc2626" : isLow ? "#ef4444" : current.isBreak ? "#60a5fa" : "#dc2626",
+                borderRadius: "5px",
+                transition: "width 1s linear, background 0.3s",
               }}
-            >
+            />
+          </div>
+
+          {/* Tempo à esquerda + Blinds à direita */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: fullscreen ? "clamp(12px, 2vw, 24px)" : "clamp(8px, 2vw, 16px)",
+              marginBottom: fullscreen ? "20px" : "12px",
+            }}
+          >
+            <div style={{ flex: 1, textAlign: "right" }}>
               <span
                 style={{
-                  fontSize: fullscreen ? "clamp(48px, 14vw, 84px)" : "clamp(34px, 11vw, 48px)",
+                  fontSize: fullscreen ? "clamp(42px, 10vw, 80px)" : "clamp(28px, 7vw, 42px)",
                   fontWeight: 900,
                   fontFamily: "'Fira Mono', monospace",
                   color: isCritical ? "#dc2626" : isLow ? "#ef4444" : t.text,
+                  lineHeight: 1,
+                  whiteSpace: "nowrap",
                   animation: isCritical
                     ? "criticalPulse 0.5s infinite"
                     : isLow
@@ -182,13 +138,103 @@ export default function TimerTab({
                 {formatTime(secondsLeft)}
               </span>
             </div>
+
+            {!current.isBreak && (
+              <>
+              <span
+                style={{
+                  color: t.textMuted,
+                  fontSize: fullscreen ? "clamp(30px, 7vw, 60px)" : "clamp(20px, 5vw, 32px)",
+                  fontWeight: 300,
+                  fontFamily: "'Fira Mono', monospace",
+                  opacity: 0.3,
+                  userSelect: "none",
+                  flexShrink: 0,
+                }}
+              >
+                |
+              </span>
+              <div style={{ flex: 1, textAlign: "left" }}>
+                <div
+                  style={{
+                    fontSize: fullscreen ? "clamp(42px, 10vw, 80px)" : "clamp(28px, 7vw, 42px)",
+                    fontWeight: 900,
+                    fontFamily: "'Fira Mono', monospace",
+                    color: "#dc2626",
+                    lineHeight: 1,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {formatChips(current.small)}/{formatChips(current.big)}
+                </div>
+              </div>
+              </>
+            )}
           </div>
 
+          {/* Ante atual + Próximo nível centralizados */}
+          <div style={{ textAlign: "center", marginBottom: fullscreen ? "28px" : "20px" }}>
+            {!current.isBreak && current.ante > 0 && (
+              <div style={{ marginBottom: "6px", padding: fullscreen ? "6px 0" : "4px 0" }}>
+                <span
+                  style={{
+                    color: t.textMuted,
+                    fontSize: fullscreen ? "13px" : "10px",
+                    textTransform: "uppercase",
+                    letterSpacing: "1.5px",
+                    fontFamily: "'Fira Mono', monospace",
+                  }}
+                >
+                  Atual →{" "}
+                </span>
+                <span
+                  style={{
+                    color: "#a78bfa",
+                    fontWeight: 700,
+                    fontFamily: "'Fira Mono', monospace",
+                    fontSize: fullscreen ? "18px" : "14px",
+                  }}
+                >
+                  Ante: {formatChips(current.ante)}
+                </span>
+              </div>
+            )}
+            {next && (
+              <div style={{ padding: fullscreen ? "6px 0" : "4px 0" }}>
+                <span
+                  style={{
+                    color: t.textMuted,
+                    fontSize: fullscreen ? "13px" : "10px",
+                    textTransform: "uppercase",
+                    letterSpacing: "1.5px",
+                    fontFamily: "'Fira Mono', monospace",
+                  }}
+                >
+                  Próximo →{" "}
+                </span>
+                <span
+                  style={{
+                    color: t.text,
+                    fontWeight: 700,
+                    fontFamily: "'Fira Mono', monospace",
+                    fontSize: fullscreen ? "18px" : "14px",
+                  }}
+                >
+                  {next.isBreak
+                    ? "☕ Intervalo"
+                    : `${formatChips(next.small)}/${formatChips(next.big)}${next.ante ? ` (Ante: ${formatChips(next.ante)})` : ""}`}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Controles */}
           {!readOnly && (
             <div
               style={{
                 display: "flex",
                 justifyContent: "center",
+                alignItems: "center",
                 gap: "12px",
                 marginBottom: "24px",
                 flexWrap: "wrap",
@@ -252,42 +298,6 @@ export default function TimerTab({
               {fullscreen ? "✕ SAIR TELA CHEIA" : "🖥 TELA CHEIA"}
             </button>
           </div>
-
-          {next && (
-            <div
-              style={{
-                background: t.rowBg,
-                borderRadius: "10px",
-                padding: "12px",
-                marginBottom: "20px",
-                border: `1px solid ${t.borderSubtle}`,
-              }}
-            >
-              <span
-                style={{
-                  color: t.textMuted,
-                  fontSize: fullscreen ? "13px" : "10px",
-                  textTransform: "uppercase",
-                  letterSpacing: "1.5px",
-                  fontFamily: "'Fira Mono', monospace",
-                }}
-              >
-                Próximo →{" "}
-              </span>
-              <span
-                style={{
-                  color: t.text,
-                  fontWeight: 700,
-                  fontFamily: "'Fira Mono', monospace",
-                  fontSize: fullscreen ? "18px" : "14px",
-                }}
-              >
-                {next.isBreak
-                  ? "☕ Intervalo"
-                  : `${formatChips(next.small)}/${formatChips(next.big)}${next.ante ? ` (ante ${formatChips(next.ante)})` : ""}`}
-              </span>
-            </div>
-          )}
 
           <div
             style={{

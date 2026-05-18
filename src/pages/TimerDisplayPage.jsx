@@ -113,10 +113,6 @@ export default function TimerDisplayPage() {
   const isLow = state.secondsLeft <= 60;
   const isCritical = state.secondsLeft <= 10;
 
-  const cSize = 360;
-  const strokeW = 12;
-  const cR = cSize / 2 - strokeW - 4;
-
   return (
     <div
       style={{
@@ -159,78 +155,111 @@ export default function TimerDisplayPage() {
         {current && (
           <>
             {/* Level */}
-            <div style={{ color: t.textMuted, fontSize: "18px", textTransform: "uppercase", letterSpacing: "4px", marginBottom: "8px" }}>
+            <div style={{ color: t.textMuted, fontSize: "18px", textTransform: "uppercase", letterSpacing: "4px", marginBottom: "12px" }}>
               {current.isBreak ? "☕ Intervalo" : `Nível ${current.level}`}
             </div>
 
-            {/* Blinds */}
-            {!current.isBreak && (
-              <div style={{ marginBottom: "24px" }}>
-                <div style={{ fontSize: "clamp(42px, 10vw, 72px)", fontWeight: 900, color: "#dc2626", lineHeight: 1 }}>
-                  {formatChips(current.small)} / {formatChips(current.big)}
-                </div>
-                {current.ante > 0 && (
-                  <div style={{ color: "#a78bfa", fontSize: "28px", fontWeight: 600, marginTop: "6px" }}>
-                    Ante: {formatChips(current.ante)}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Timer Circle */}
-            <div style={{ position: "relative", width: `${cSize}px`, height: `${cSize}px`, margin: "0 auto 32px" }}>
-              <svg width={cSize} height={cSize} viewBox={`0 0 ${cSize} ${cSize}`}>
-                <circle cx={cSize / 2} cy={cSize / 2} r={cR} fill="none" stroke={t.circleTrack} strokeWidth={strokeW} />
-                <circle
-                  cx={cSize / 2}
-                  cy={cSize / 2}
-                  r={cR}
-                  fill="none"
-                  stroke={isCritical ? "#dc2626" : isLow ? "#ef4444" : current.isBreak ? "#60a5fa" : "#dc2626"}
-                  strokeWidth={strokeW}
-                  strokeDasharray={`${2 * Math.PI * cR}`}
-                  strokeDashoffset={`${2 * Math.PI * cR * (1 - progress)}`}
-                  strokeLinecap="round"
-                  transform={`rotate(-90 ${cSize / 2} ${cSize / 2})`}
-                  style={{ transition: "stroke-dashoffset 1s linear, stroke 0.3s" }}
-                />
-              </svg>
-              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <span
-                  style={{
-                    fontSize: "clamp(56px, 16vw, 96px)",
-                    fontWeight: 900,
-                    color: isCritical ? "#dc2626" : isLow ? "#ef4444" : t.text,
-                    animation: isCritical ? "criticalPulse 0.5s infinite" : isLow ? "pulse 1s infinite" : "none",
-                  }}
-                >
-                  {formatTime(state.secondsLeft)}
-                </span>
-              </div>
-            </div>
-
-            {/* Next Level */}
-            {next && (
+            {/* Barra de progresso horizontal */}
+            <div
+              style={{
+                width: "100%",
+                height: "12px",
+                background: t.circleTrack,
+                borderRadius: "6px",
+                overflow: "hidden",
+                marginBottom: "36px",
+              }}
+            >
               <div
                 style={{
-                  background: t.rowBg,
-                  borderRadius: "12px",
-                  padding: "16px 24px",
-                  marginBottom: "28px",
-                  border: `1px solid ${t.borderSubtle}`,
-                  display: "inline-block",
+                  width: `${progress * 100}%`,
+                  height: "100%",
+                  background: isCritical ? "#dc2626" : isLow ? "#ef4444" : current.isBreak ? "#60a5fa" : "#dc2626",
+                  borderRadius: "6px",
+                  transition: "width 1s linear, background 0.3s",
+                }}
+              />
+            </div>
+
+            {/* Tempo à esquerda + Blinds à direita */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "clamp(12px, 2vw, 24px)",
+                marginBottom: "24px",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: "clamp(48px, 10vw, 96px)",
+                  fontWeight: 900,
+                  fontFamily: "'Fira Mono', monospace",
+                  color: isCritical ? "#dc2626" : isLow ? "#ef4444" : t.text,
+                  lineHeight: 1,
+                  whiteSpace: "nowrap",
+                  animation: isCritical ? "criticalPulse 0.5s infinite" : isLow ? "pulse 1s infinite" : "none",
                 }}
               >
-                <span style={{ color: t.textMuted, fontSize: "14px", textTransform: "uppercase", letterSpacing: "2px" }}>
-                  Próximo →{" "}
+                {formatTime(state.secondsLeft)}
+              </span>
+
+              {!current.isBreak && (
+                <>
+                <span
+                  style={{
+                    color: t.textMuted,
+                    fontSize: "clamp(36px, 8vw, 72px)",
+                    fontWeight: 300,
+                    fontFamily: "'Fira Mono', monospace",
+                    opacity: 0.3,
+                    userSelect: "none",
+                  }}
+                >
+                  |
                 </span>
-                <span style={{ color: t.text, fontWeight: 700, fontSize: "20px" }}>
-                  {next.isBreak
-                    ? "☕ Intervalo"
-                    : `${formatChips(next.small)}/${formatChips(next.big)}${next.ante ? ` (ante ${formatChips(next.ante)})` : ""}`}
+                <span
+                  style={{
+                    fontSize: "clamp(48px, 10vw, 96px)",
+                    whiteSpace: "nowrap",
+                    fontWeight: 900,
+                    fontFamily: "'Fira Mono', monospace",
+                    color: "#dc2626",
+                    lineHeight: 1,
+                  }}
+                >
+                  {formatChips(current.small)}/{formatChips(current.big)}
                 </span>
-              </div>
-            )}
+                </>
+              )}
+            </div>
+
+            {/* Ante atual + Próximo nível centralizados */}
+            <div style={{ textAlign: "center", marginBottom: "32px" }}>
+              {!current.isBreak && current.ante > 0 && (
+                <div style={{ marginBottom: "8px" }}>
+                  <span style={{ color: t.textMuted, fontSize: "14px", textTransform: "uppercase", letterSpacing: "2px", fontFamily: "'Fira Mono', monospace" }}>
+                    Atual →{" "}
+                  </span>
+                  <span style={{ color: "#a78bfa", fontWeight: 700, fontSize: "20px", fontFamily: "'Fira Mono', monospace" }}>
+                    Ante: {formatChips(current.ante)}
+                  </span>
+                </div>
+              )}
+              {next && (
+                <div>
+                  <span style={{ color: t.textMuted, fontSize: "14px", textTransform: "uppercase", letterSpacing: "2px", fontFamily: "'Fira Mono', monospace" }}>
+                    Próximo →{" "}
+                  </span>
+                  <span style={{ color: t.text, fontWeight: 700, fontSize: "20px", fontFamily: "'Fira Mono', monospace" }}>
+                    {next.isBreak
+                      ? "☕ Intervalo"
+                      : `${formatChips(next.small)}/${formatChips(next.big)}${next.ante ? ` (Ante: ${formatChips(next.ante)})` : ""}`}
+                  </span>
+                </div>
+              )}
+            </div>
 
             {/* Stats */}
             <div style={{ display: "flex", justifyContent: "center", gap: "48px", flexWrap: "wrap" }}>
