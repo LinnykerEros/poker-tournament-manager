@@ -7,6 +7,7 @@ import LoginPage from "./pages/LoginPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import TournamentPage from "./pages/TournamentPage.jsx";
 import TimerDisplayPage from "./pages/TimerDisplayPage.jsx";
+import RankingPage from "./pages/RankingPage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
               <Route path="/" element={<DashboardPage />} />
+              <Route path="/ranking" element={<RankingPage />} />
               <Route path="/tournament/:id" element={<TournamentPage />} />
             </Route>
             <Route path="/tournament/:id/timer" element={<TimerDisplayPage />} />

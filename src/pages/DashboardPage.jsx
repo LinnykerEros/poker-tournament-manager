@@ -106,27 +106,47 @@ export default function DashboardPage() {
         >
           TORNEIOS
         </h2>
-        <button
-          onClick={() => !hasActiveTournament && setShowForm(!showForm)}
-          style={{
-            padding: "10px 20px",
-            background: hasActiveTournament
-              ? "rgba(107,114,128,0.3)"
-              : "linear-gradient(135deg, #dc2626, #ef4444)",
-            color: hasActiveTournament ? "#6b7280" : "#ffffff",
-            border: "none",
-            borderRadius: "10px",
-            cursor: hasActiveTournament ? "not-allowed" : "pointer",
-            fontWeight: 800,
-            fontFamily: "'Fira Mono', monospace",
-            fontSize: "12px",
-            letterSpacing: "0.5px",
-            opacity: hasActiveTournament ? 0.6 : 1,
-          }}
-          title={hasActiveTournament ? "Finalize o torneio ativo antes de criar outro" : ""}
-        >
-          + NOVO TORNEIO
-        </button>
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          <button
+            onClick={() => navigate("/ranking")}
+            style={{
+              padding: "10px 16px",
+              background: "transparent",
+              color: t.text,
+              border: `1px solid ${t.borderStrong}`,
+              borderRadius: "10px",
+              cursor: "pointer",
+              fontWeight: 800,
+              fontFamily: "'Fira Mono', monospace",
+              fontSize: "12px",
+              letterSpacing: "0.5px",
+            }}
+            title="Ver ranking mensal"
+          >
+            🏆 RANKING
+          </button>
+          <button
+            onClick={() => !hasActiveTournament && setShowForm(!showForm)}
+            style={{
+              padding: "10px 20px",
+              background: hasActiveTournament
+                ? "rgba(107,114,128,0.3)"
+                : "linear-gradient(135deg, #dc2626, #ef4444)",
+              color: hasActiveTournament ? "#6b7280" : "#ffffff",
+              border: "none",
+              borderRadius: "10px",
+              cursor: hasActiveTournament ? "not-allowed" : "pointer",
+              fontWeight: 800,
+              fontFamily: "'Fira Mono', monospace",
+              fontSize: "12px",
+              letterSpacing: "0.5px",
+              opacity: hasActiveTournament ? 0.6 : 1,
+            }}
+            title={hasActiveTournament ? "Finalize o torneio ativo antes de criar outro" : ""}
+          >
+            + NOVO TORNEIO
+          </button>
+        </div>
       </div>
 
       {showForm && (

@@ -229,6 +229,7 @@ export default function PlayersTab({ readOnly = false }) {
                     <img
                       src={profile.avatar_url}
                       alt=""
+                      referrerPolicy="no-referrer"
                       style={{ width: "28px", height: "28px", borderRadius: "50%" }}
                     />
                   ) : (

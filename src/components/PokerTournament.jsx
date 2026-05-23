@@ -47,7 +47,6 @@ export default function PokerTournament() {
 
   const handleFinishTournament = async () => {
     if (!confirm("Encerrar este torneio? Essa ação não pode ser desfeita.")) return;
-    setRunning(false);
     await updateTournamentField({
       status: "finished",
       timer_running: false,
@@ -184,7 +183,7 @@ export default function PokerTournament() {
             running={running}
             setRunning={setRunning}
             getAudioCtx={getAudioCtx}
-            readOnly={!isOrganizer}
+            readOnly={!isOrganizer || tournament.status === "finished"}
           />
         </div>
       </div>
@@ -281,7 +280,7 @@ export default function PokerTournament() {
             running={running}
             setRunning={setRunning}
             getAudioCtx={getAudioCtx}
-            readOnly={!isOrganizer}
+            readOnly={!isOrganizer || tournament.status === "finished"}
           />
         )}
         {tab === "players" && <PlayersTab readOnly={!isOrganizer} />}
@@ -296,7 +295,7 @@ export default function PokerTournament() {
             prizeStructure={prizeStructure}
             setPrizeStructure={setPrizeStructure}
             players={players}
-            readOnly={!isOrganizer}
+            readOnly={!isOrganizer || tournament.status === "finished"}
           />
         )}
       </div>

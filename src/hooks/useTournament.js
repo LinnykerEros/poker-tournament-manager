@@ -119,6 +119,24 @@ export function useTournament() {
     return data;
   }
 
+  async function listFinishedTournamentsInRange(startISO, endISO) {
+    const { data, error } = await supabase
+      .from("tournaments")
+      .select(`
+        id, name, finished_at,
+        tournament_players (
+          player_id, player_name, place,
+          profiles ( display_name )
+        )
+      `)
+      .eq("status", "finished")
+      .gte("finished_at", startISO)
+      .lt("finished_at", endISO)
+      .order("finished_at", { ascending: false });
+    if (error) throw error;
+    return data;
+  }
+
   return {
     listTournaments,
     createTournament,
@@ -130,5 +148,6 @@ export function useTournament() {
     updatePlayer,
     removePlayer,
     listProfiles,
+    listFinishedTournamentsInRange,
   };
 }

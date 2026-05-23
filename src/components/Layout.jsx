@@ -100,6 +100,7 @@ export default function Layout() {
                   <img
                     src={profile.avatar_url}
                     alt=""
+                    referrerPolicy="no-referrer"
                     style={{ width: "28px", height: "28px", borderRadius: "50%" }}
                   />
                 )}
