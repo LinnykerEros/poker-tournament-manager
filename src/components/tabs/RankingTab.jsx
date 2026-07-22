@@ -7,7 +7,9 @@ export default function RankingTab({ players, config, prizeStructure }) {
   const totalBuyIns = players.length * config.buyIn;
   const totalAddOns = players.reduce((s, p) => s + p.addOns, 0) * config.addOnCost;
   const totalRebuys = players.reduce((s, p) => s + p.rebuys, 0) * config.rebuyCost;
-  const totalPrizePool = totalBuyIns + totalAddOns + totalRebuys;
+  const totalStartChips =
+    players.filter((p) => p.hasStartChip).length * (config.startChipCost || 0);
+  const totalPrizePool = totalBuyIns + totalAddOns + totalRebuys + totalStartChips;
 
   const eliminated = players.filter((p) => p.eliminated).sort((a, b) => a.place - b.place);
   const active = players.filter((p) => !p.eliminated);

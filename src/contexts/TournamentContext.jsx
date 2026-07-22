@@ -233,6 +233,7 @@ export function TournamentProvider({ tournamentId, children }) {
       if (fields.stack !== undefined) dbFields.stack = fields.stack;
       if (fields.addOns !== undefined) dbFields.add_ons = fields.addOns;
       if (fields.rebuys !== undefined) dbFields.rebuys = fields.rebuys;
+      if (fields.hasStartChip !== undefined) dbFields.has_start_chip = fields.hasStartChip;
       if (fields.eliminated !== undefined) dbFields.eliminated = fields.eliminated;
       if (fields.place !== undefined) dbFields.place = fields.place;
       if (fields.eliminatedAt !== undefined) dbFields.eliminated_at = fields.eliminatedAt;

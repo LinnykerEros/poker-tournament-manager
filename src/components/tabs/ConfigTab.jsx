@@ -25,14 +25,18 @@ export default function ConfigTab({ config, setConfig, prizeStructure, setPrizeS
   const totalBuyIns = players.length * config.buyIn;
   const totalAddOns = players.reduce((s, p) => s + p.addOns, 0) * config.addOnCost;
   const totalRebuys = players.reduce((s, p) => s + p.rebuys, 0) * config.rebuyCost;
-  const totalPrizePool = totalBuyIns + totalAddOns + totalRebuys;
+  const totalStartChips =
+    players.filter((p) => p.hasStartChip).length * (config.startChipCost || 0);
+  const totalPrizePool = totalBuyIns + totalAddOns + totalRebuys + totalStartChips;
 
   const fields = [
     { key: "startingStack", label: "Stack Inicial", icon: "🪙" },
     { key: "addOnChips", label: "Fichas Add-on", icon: "➕" },
     { key: "rebuyChips", label: "Fichas Rebuy", icon: "🔄" },
+    { key: "startChipChips", label: "Fichas StartChip", icon: "🎰" },
     { key: "addOnCost", label: "Custo Add-on (R$)", icon: "💰" },
     { key: "rebuyCost", label: "Custo Rebuy (R$)", icon: "💰" },
+    { key: "startChipCost", label: "Custo StartChip (R$)", icon: "💰" },
     { key: "buyIn", label: "Buy-in (R$)", icon: "🎫" },
   ];
 
@@ -84,12 +88,12 @@ export default function ConfigTab({ config, setConfig, prizeStructure, setPrizeS
                 fontFamily: "'Fira Mono', monospace",
                 boxSizing: "border-box",
               }}>
-                {config[f.key]}
+                {config[f.key] ?? 0}
               </div>
             ) : (
               <input
                 type="number"
-                value={config[f.key]}
+                value={config[f.key] ?? 0}
                 onChange={(e) => update(f.key, e.target.value)}
                 style={{
                   width: "100%",
@@ -188,6 +192,9 @@ export default function ConfigTab({ config, setConfig, prizeStructure, setPrizeS
             </span>
             <span style={{ color: t.textMuted, fontSize: "11px", fontFamily: "'Fira Mono', monospace" }}>
               Rebuys: {formatMoney(totalRebuys)}
+            </span>
+            <span style={{ color: t.textMuted, fontSize: "11px", fontFamily: "'Fira Mono', monospace" }}>
+              StartChips: {formatMoney(totalStartChips)}
             </span>
           </div>
         </div>

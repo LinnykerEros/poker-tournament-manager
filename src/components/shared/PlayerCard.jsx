@@ -3,7 +3,7 @@ import MiniBtn from "./MiniBtn.jsx";
 import { PLACE_MEDALS } from "../../utils/constants.js";
 import { formatChips } from "../../utils/formatters.js";
 
-export default function PlayerCard({ player, onRemove, onEliminate, onAddOn, onRebuy, eliminated, readOnly = false }) {
+export default function PlayerCard({ player, onRemove, onEliminate, onAddOn, onRebuy, onStartChip, canBuyStartChip = false, eliminated, readOnly = false }) {
   const { t } = useTheme();
   return (
     <div
@@ -67,6 +67,11 @@ export default function PlayerCard({ player, onRemove, onEliminate, onAddOn, onR
               +{player.rebuys} rebuy
             </span>
           )}
+          {player.hasStartChip && (
+            <span style={{ color: "#fbbf24", fontSize: "11px", fontFamily: "'Fira Mono', monospace" }}>
+              🎰 startchip
+            </span>
+          )}
           {player.place && (
             <span
               style={{
@@ -85,8 +90,13 @@ export default function PlayerCard({ player, onRemove, onEliminate, onAddOn, onR
         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
           {!eliminated && (
             <>
-              <MiniBtn label="Add-on" color="#60a5fa" onClick={() => onAddOn(player.id)} />
+              {player.addOns < 1 && (
+                <MiniBtn label="Add-on" color="#60a5fa" onClick={() => onAddOn(player.id)} />
+              )}
               <MiniBtn label="Rebuy" color="#a78bfa" onClick={() => onRebuy(player.id)} />
+              {canBuyStartChip && !player.hasStartChip && (
+                <MiniBtn label="StartChip" color="#fbbf24" onClick={() => onStartChip(player.id)} />
+              )}
             </>
           )}
           <MiniBtn

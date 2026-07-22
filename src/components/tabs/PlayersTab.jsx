@@ -10,10 +10,15 @@ export default function PlayersTab({ readOnly = false }) {
   const {
     players,
     config,
+    tournament,
     addPlayerToTournament,
     removePlayerFromTournament,
     updatePlayerInTournament,
   } = useTournamentContext();
+
+  // StartChip só pode ser comprado na entrada, enquanto o torneio não iniciou
+  const tournamentStarted =
+    !!tournament?.started_at || (tournament?.status && tournament.status !== "setup");
   const { listProfiles } = useTournament();
 
   const [name, setName] = useState("");
@@ -82,7 +87,7 @@ export default function PlayersTab({ readOnly = false }) {
 
   const addOn = async (id) => {
     const p = players.find((pl) => pl.id === id);
-    if (!p) return;
+    if (!p || p.addOns >= 1) return; // máx. 1 add-on por jogador
     await updatePlayerInTournament(id, {
       addOns: p.addOns + 1,
       stack: p.stack + config.addOnChips,
@@ -95,6 +100,16 @@ export default function PlayersTab({ readOnly = false }) {
     await updatePlayerInTournament(id, {
       rebuys: p.rebuys + 1,
       stack: p.stack + config.rebuyChips,
+    });
+  };
+
+  const buyStartChip = async (id) => {
+    if (tournamentStarted) return;
+    const p = players.find((pl) => pl.id === id);
+    if (!p || p.hasStartChip) return;
+    await updatePlayerInTournament(id, {
+      hasStartChip: true,
+      stack: p.stack + (config.startChipChips || 0),
     });
   };
 
@@ -322,6 +337,8 @@ export default function PlayersTab({ readOnly = false }) {
             onEliminate={toggleEliminated}
             onAddOn={addOn}
             onRebuy={rebuy}
+            onStartChip={buyStartChip}
+            canBuyStartChip={!tournamentStarted}
             readOnly={readOnly}
           />
         ))}
@@ -347,6 +364,8 @@ export default function PlayersTab({ readOnly = false }) {
                 onEliminate={toggleEliminated}
                 onAddOn={addOn}
                 onRebuy={rebuy}
+                onStartChip={buyStartChip}
+                canBuyStartChip={!tournamentStarted}
                 eliminated
                 readOnly={readOnly}
               />
