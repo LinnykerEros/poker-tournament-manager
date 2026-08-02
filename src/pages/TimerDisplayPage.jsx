@@ -33,24 +33,7 @@ export default function TimerDisplayPage() {
   const [loading, setLoading] = useState(true);
   const [connected, setConnected] = useState(false);
   const [showPrizes, setShowPrizes] = useState(PAINEL_SEMPRE_VISIVEL);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const prevLevelRef = useRef(null);
-
-  const toggleFullscreen = useCallback(() => {
-    if (document.fullscreenElement) {
-      document.exitFullscreen?.();
-    } else {
-      document.documentElement.requestFullscreen?.().catch(() => {});
-    }
-  }, []);
-
-  // O F11 é do navegador, não da aplicação: nada de interceptar a tecla.
-  // Aqui só acompanhamos o estado para o rótulo do botão de tela cheia.
-  useEffect(() => {
-    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener("fullscreenchange", onFsChange);
-    return () => document.removeEventListener("fullscreenchange", onFsChange);
-  }, []);
 
   useEffect(() => {
     loadInitial();
@@ -201,13 +184,13 @@ export default function TimerDisplayPage() {
       />
       <CardSuitBg />
 
-      <div style={{ position: "relative", zIndex: 1, textAlign: "center", width: "100%", maxWidth: "min(1800px, 94vw)", padding: "clamp(20px, 3vh, 48px)" }}>
+      <div style={{ position: "relative", zIndex: 1, textAlign: "center", width: "100%", maxWidth: "1000px", padding: "20px" }}>
         {/* Header */}
         <div style={{ marginBottom: "12px", display: "flex", alignItems: "center", justifyContent: "center", gap: "16px" }}>
-          <img src="/logo.png" alt="2Z Poker" style={{ width: "clamp(48px, 5vw, 84px)", height: "auto", filter: t.logoFilter }} />
+          <img src="/logo.png" alt="2Z Poker" style={{ width: "48px", height: "auto", filter: t.logoFilter }} />
           <span
             style={{
-              fontSize: "clamp(24px, 3vw, 48px)",
+              fontSize: "24px",
               fontWeight: 900,
               background: "linear-gradient(135deg, #dc2626, #ef4444)",
               WebkitBackgroundClip: "text",
@@ -222,7 +205,7 @@ export default function TimerDisplayPage() {
         {current && (
           <>
             {/* Level */}
-            <div style={{ color: t.textMuted, fontSize: "clamp(18px, 2.2vw, 34px)", textTransform: "uppercase", letterSpacing: "4px", marginBottom: "clamp(12px, 2vh, 24px)" }}>
+            <div style={{ color: t.textMuted, fontSize: "18px", textTransform: "uppercase", letterSpacing: "4px", marginBottom: "12px" }}>
               {current.isBreak ? "☕ Intervalo" : `Nível ${current.level}`}
             </div>
 
@@ -230,11 +213,11 @@ export default function TimerDisplayPage() {
             <div
               style={{
                 width: "100%",
-                height: "clamp(12px, 1.6vh, 22px)",
+                height: "12px",
                 background: t.circleTrack,
-                borderRadius: "11px",
+                borderRadius: "6px",
                 overflow: "hidden",
-                marginBottom: "clamp(36px, 6vh, 72px)",
+                marginBottom: "36px",
               }}
             >
               <div
@@ -260,7 +243,7 @@ export default function TimerDisplayPage() {
             >
               <span
                 style={{
-                  fontSize: "clamp(48px, 11vw, 200px)",
+                  fontSize: "clamp(48px, 10vw, 96px)",
                   fontWeight: 900,
                   fontFamily: "'Fira Mono', monospace",
                   color: isCritical ? "#dc2626" : isLow ? "#ef4444" : t.text,
@@ -277,7 +260,7 @@ export default function TimerDisplayPage() {
                 <span
                   style={{
                     color: t.textMuted,
-                    fontSize: "clamp(36px, 8vw, 150px)",
+                    fontSize: "clamp(36px, 8vw, 72px)",
                     fontWeight: 300,
                     fontFamily: "'Fira Mono', monospace",
                     opacity: 0.3,
@@ -288,7 +271,7 @@ export default function TimerDisplayPage() {
                 </span>
                 <span
                   style={{
-                    fontSize: "clamp(48px, 11vw, 200px)",
+                    fontSize: "clamp(48px, 10vw, 96px)",
                     whiteSpace: "nowrap",
                     fontWeight: 900,
                     fontFamily: "'Fira Mono', monospace",
@@ -306,20 +289,20 @@ export default function TimerDisplayPage() {
             <div style={{ textAlign: "center", marginBottom: "32px" }}>
               {!current.isBreak && current.ante > 0 && (
                 <div style={{ marginBottom: "8px" }}>
-                  <span style={{ color: t.textMuted, fontSize: "clamp(14px, 1.5vw, 24px)", textTransform: "uppercase", letterSpacing: "2px", fontFamily: "'Fira Mono', monospace" }}>
+                  <span style={{ color: t.textMuted, fontSize: "14px", textTransform: "uppercase", letterSpacing: "2px", fontFamily: "'Fira Mono', monospace" }}>
                     Atual →{" "}
                   </span>
-                  <span style={{ color: "#a78bfa", fontWeight: 700, fontSize: "clamp(20px, 2.2vw, 38px)", fontFamily: "'Fira Mono', monospace" }}>
+                  <span style={{ color: "#a78bfa", fontWeight: 700, fontSize: "20px", fontFamily: "'Fira Mono', monospace" }}>
                     Ante: {formatChips(current.ante)}
                   </span>
                 </div>
               )}
               {next && (
                 <div>
-                  <span style={{ color: t.textMuted, fontSize: "clamp(14px, 1.5vw, 24px)", textTransform: "uppercase", letterSpacing: "2px", fontFamily: "'Fira Mono', monospace" }}>
+                  <span style={{ color: t.textMuted, fontSize: "14px", textTransform: "uppercase", letterSpacing: "2px", fontFamily: "'Fira Mono', monospace" }}>
                     Próximo →{" "}
                   </span>
-                  <span style={{ color: t.text, fontWeight: 700, fontSize: "clamp(20px, 2.2vw, 38px)", fontFamily: "'Fira Mono', monospace" }}>
+                  <span style={{ color: t.text, fontWeight: 700, fontSize: "20px", fontFamily: "'Fira Mono', monospace" }}>
                     {next.isBreak
                       ? "☕ Intervalo"
                       : `${formatChips(next.small)}/${formatChips(next.big)}${next.ante ? ` (Ante: ${formatChips(next.ante)})` : ""}`}
@@ -329,16 +312,16 @@ export default function TimerDisplayPage() {
             </div>
 
             {/* Stats */}
-            <div style={{ display: "flex", justifyContent: "center", gap: "clamp(48px, 8vw, 140px)", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", justifyContent: "center", gap: "48px", flexWrap: "wrap" }}>
               {[
                 { label: "Jogadores", value: state.playerCount, icon: "👥" },
                 { label: "Stack Médio", value: formatChips(state.avgStack), icon: "📊" },
                 { label: "Total Chips", value: formatChips(state.totalChips), icon: "🪙" },
               ].map((s) => (
                 <div key={s.label} style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "clamp(24px, 2.5vw, 42px)" }}>{s.icon}</div>
-                  <div style={{ color: "#dc2626", fontSize: "clamp(28px, 3.2vw, 60px)", fontWeight: 800 }}>{s.value}</div>
-                  <div style={{ color: t.textMuted, fontSize: "clamp(12px, 1.2vw, 20px)", textTransform: "uppercase", letterSpacing: "1.5px" }}>{s.label}</div>
+                  <div style={{ fontSize: "24px" }}>{s.icon}</div>
+                  <div style={{ color: "#dc2626", fontSize: "28px", fontWeight: 800 }}>{s.value}</div>
+                  <div style={{ color: t.textMuted, fontSize: "12px", textTransform: "uppercase", letterSpacing: "1.5px" }}>{s.label}</div>
                 </div>
               ))}
             </div>
@@ -448,25 +431,6 @@ export default function TimerDisplayPage() {
           <span style={{ color: t.textMuted, fontSize: "10px" }}>
             {connected ? "Sincronizado" : "Aguardando..."}
           </span>
-
-          <button
-            onClick={toggleFullscreen}
-            title={isFullscreen ? "Sair da tela cheia" : "Tela cheia"}
-            style={{
-              marginLeft: "8px",
-              padding: "2px 8px",
-              background: "transparent",
-              color: t.textMuted,
-              border: `1px solid ${t.borderMedium}`,
-              borderRadius: "6px",
-              cursor: "pointer",
-              fontSize: "11px",
-              fontFamily: "'Fira Mono', monospace",
-              opacity: 0.5,
-            }}
-          >
-            {isFullscreen ? "⛶ Sair" : "⛶ Tela cheia"}
-          </button>
         </div>
       </div>
 
