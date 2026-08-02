@@ -29,6 +29,7 @@ export default function PokerTournament() {
     secondsLeft,
     running,
     isOrganizer,
+    canEdit,
     setCurrentLevel,
     setSecondsLeft,
     setRunning,
@@ -204,7 +205,7 @@ export default function PokerTournament() {
             running={running}
             setRunning={setRunning}
             getAudioCtx={getAudioCtx}
-            readOnly={!isOrganizer || tournament.status === "finished"}
+            readOnly={!canEdit}
           />
         </div>
       </div>
@@ -224,23 +225,7 @@ export default function PokerTournament() {
         >
           {tournament.name}
         </h2>
-        {!isOrganizer && (
-          <div style={{
-            display: "inline-block",
-            padding: "4px 12px",
-            background: "rgba(96,165,250,0.1)",
-            border: "1px solid rgba(96,165,250,0.3)",
-            borderRadius: "6px",
-            color: "#60a5fa",
-            fontSize: "11px",
-            fontWeight: 600,
-            fontFamily: "'Fira Mono', monospace",
-            marginBottom: "8px",
-          }}>
-            MODO ESPECTADOR
-          </div>
-        )}
-        {isOrganizer && (
+        {canEdit && (
           <button
             onClick={openTimerWindow}
             style={{
@@ -301,14 +286,14 @@ export default function PokerTournament() {
             running={running}
             setRunning={setRunning}
             getAudioCtx={getAudioCtx}
-            readOnly={!isOrganizer || tournament.status === "finished"}
+            readOnly={!canEdit}
           />
         )}
-        {tab === "players" && <PlayersTab readOnly={!isOrganizer} />}
+        {tab === "players" && <PlayersTab readOnly={!canEdit} />}
         {tab === "ranking" && (
           <RankingTab players={players} config={config} prizeStructure={prizeStructure} />
         )}
-        {tab === "blinds" && <BlindsTab blinds={blinds} setBlinds={setBlinds} readOnly={!isOrganizer} />}
+        {tab === "blinds" && <BlindsTab blinds={blinds} setBlinds={setBlinds} readOnly={!canEdit} />}
         {tab === "config" && (
           <ConfigTab
             config={config}
@@ -316,12 +301,12 @@ export default function PokerTournament() {
             prizeStructure={prizeStructure}
             setPrizeStructure={setPrizeStructure}
             players={players}
-            readOnly={!isOrganizer || tournament.status === "finished"}
+            readOnly={!canEdit}
           />
         )}
       </div>
 
-      {isOrganizer && tournament.status !== "finished" && (
+      {canEdit && (
         <div style={{ textAlign: "center", marginTop: "24px" }}>
           <button
             onClick={handleFinishTournament}

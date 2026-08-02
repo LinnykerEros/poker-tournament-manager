@@ -16,6 +16,11 @@ export function TournamentProvider({ tournamentId, children }) {
 
   const isOrganizer = !!(session?.user?.id && tournament?.organizer_id && session.user.id === tournament.organizer_id);
 
+  // MODO ESPECTADOR DESATIVADO: qualquer usuário autenticado edita qualquer
+  // torneio que não esteja finalizado.
+  // Para restaurar o modo espectador, basta: const canEdit = isOrganizer;
+  const canEdit = !!session?.user?.id && tournament?.status !== "finished";
+
   const config = tournament?.config || {};
   const blinds = tournament?.blinds || [];
   const prizeStructure = tournament?.prize_structure || [];
@@ -265,6 +270,7 @@ export function TournamentProvider({ tournamentId, children }) {
         secondsLeft,
         running,
         isOrganizer,
+        canEdit,
         setConfig,
         setBlinds,
         setPrizeStructure,
