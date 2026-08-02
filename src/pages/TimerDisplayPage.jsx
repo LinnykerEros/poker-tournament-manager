@@ -33,7 +33,24 @@ export default function TimerDisplayPage() {
   const [loading, setLoading] = useState(true);
   const [connected, setConnected] = useState(false);
   const [showPrizes, setShowPrizes] = useState(PAINEL_SEMPRE_VISIVEL);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const prevLevelRef = useRef(null);
+
+  // A janela da TV abre como popup, onde o F11 do navegador não funciona por
+  // não haver barra para esconder. Daí o botão, usando a Fullscreen API.
+  const toggleFullscreen = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.();
+    } else {
+      document.documentElement.requestFullscreen?.().catch(() => {});
+    }
+  }, []);
+
+  useEffect(() => {
+    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
 
   useEffect(() => {
     loadInitial();
@@ -431,6 +448,25 @@ export default function TimerDisplayPage() {
           <span style={{ color: t.textMuted, fontSize: "10px" }}>
             {connected ? "Sincronizado" : "Aguardando..."}
           </span>
+
+          <button
+            onClick={toggleFullscreen}
+            title={isFullscreen ? "Sair da tela cheia" : "Tela cheia"}
+            style={{
+              marginLeft: "8px",
+              padding: "2px 8px",
+              background: "transparent",
+              color: t.textMuted,
+              border: `1px solid ${t.borderMedium}`,
+              borderRadius: "6px",
+              cursor: "pointer",
+              fontSize: "11px",
+              fontFamily: "'Fira Mono', monospace",
+              opacity: 0.5,
+            }}
+          >
+            {isFullscreen ? "⛶ Sair" : "⛶ Tela cheia"}
+          </button>
         </div>
       </div>
 
