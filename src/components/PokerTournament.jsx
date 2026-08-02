@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../theme.jsx";
 import { useTournamentContext } from "../contexts/TournamentContext.jsx";
 import { useBroadcastSender } from "../hooks/useBroadcastChannel.js";
+import { useTimerSounds } from "../hooks/useTimerSounds.js";
 import { nextBlindLevel } from "../utils/blindProgression.js";
 import { calculatePrizePool } from "../utils/tournamentHelpers.js";
 import CardSuitBg from "./shared/CardSuitBg.jsx";
@@ -78,40 +79,19 @@ export default function PokerTournament() {
     });
   }, [secondsLeft, currentLevel, running, players, blinds, prizeStructure, config, tournament, broadcast]);
 
-  const audioCtx = useRef(null);
-  const getAudioCtx = useCallback(() => {
-    if (!audioCtx.current)
-      audioCtx.current = new (window.AudioContext || window.webkitAudioContext)();
-    return audioCtx.current;
-  }, []);
+  const { getAudioCtx, playBeep, playLevelChangeAlert } = useTimerSounds();
 
-  const playBeep = useCallback(
-    (freq = 880, dur = 0.15, vol = 0.3) => {
-      try {
-        const ctx = getAudioCtx();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.frequency.value = freq;
-        osc.type = "square";
-        gain.gain.setValueAtTime(vol, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + dur);
-        osc.start();
-        osc.stop(ctx.currentTime + dur);
-      } catch (e) {}
-    },
-    [getAudioCtx]
-  );
-
-  const playLevelChangeAlert = useCallback(() => {
-    const notes = [660, 880, 1100];
-    notes.forEach((freq, i) => setTimeout(() => playBeep(freq, 0.25, 0.6), i * 300));
-    setTimeout(
-      () => notes.forEach((freq, i) => setTimeout(() => playBeep(freq, 0.25, 0.6), i * 300)),
-      1200
-    );
-  }, [playBeep]);
+  // Antes do torneio começar, o relógio acompanha a duração configurada na aba
+  // Blinds. Depois que começa nunca mais se auto-ajusta: um torneio pausado no
+  // meio de um nível perderia o tempo já corrido.
+  useEffect(() => {
+    if (running || tournament?.started_at || !isOrganizer) return;
+    const level = blinds[currentLevel];
+    if (!level) return;
+    const alvo = level.duration * 60;
+    if (secondsLeft === alvo) return;
+    updateTournamentField({ seconds_left: alvo });
+  }, [running, tournament?.started_at, isOrganizer, blinds, currentLevel, secondsLeft, updateTournamentField]);
 
   // Gera o próximo nível automaticamente ao passar da metade do último nível,
   // para o torneio não travar se ainda estiver rolando. Só age em torneios com

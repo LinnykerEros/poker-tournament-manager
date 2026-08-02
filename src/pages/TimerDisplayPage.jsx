@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useTheme } from "../theme.jsx";
 import { useBroadcastReceiver } from "../hooks/useBroadcastChannel.js";
+import { useTimerSounds } from "../hooks/useTimerSounds.js";
 import { supabase } from "../lib/supabase.js";
 import {
   calculateDriftedSeconds,
@@ -34,7 +35,26 @@ export default function TimerDisplayPage() {
   const [connected, setConnected] = useState(false);
   const [showPrizes, setShowPrizes] = useState(PAINEL_SEMPRE_VISIVEL);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [audioLiberado, setAudioLiberado] = useState(false);
   const prevLevelRef = useRef(null);
+
+  const { playLevelChangeAlert, unlockAudio } = useTimerSounds();
+
+  // Navegador bloqueia áudio até o primeiro gesto. Qualquer clique ou tecla
+  // nesta janela destrava — inclusive o próprio botão de tela cheia.
+  useEffect(() => {
+    if (audioLiberado) return;
+    const liberar = () => {
+      unlockAudio();
+      setAudioLiberado(true);
+    };
+    window.addEventListener("pointerdown", liberar);
+    window.addEventListener("keydown", liberar);
+    return () => {
+      window.removeEventListener("pointerdown", liberar);
+      window.removeEventListener("keydown", liberar);
+    };
+  }, [audioLiberado, unlockAudio]);
 
   // A janela da TV abre como popup, onde o F11 do navegador não funciona por
   // não haver barra para esconder. Daí o botão, usando a Fullscreen API.
@@ -104,10 +124,9 @@ export default function TimerDisplayPage() {
 
   useBroadcastReceiver(id, onMessage);
 
-  // Mostra a premiação a cada virada de nível e esconde após 4 min.
-  // Só dispara em mudança real de nível — não aparece ao abrir a tela.
+  // Na virada de nível: toca o alerta e mostra a premiação por 4 min.
+  // Só dispara em mudança real de nível — não acontece ao abrir a tela.
   useEffect(() => {
-    if (PAINEL_SEMPRE_VISIVEL) return;
     const level = state?.currentLevel;
     if (level == null) return;
     if (prevLevelRef.current === null) {
@@ -116,10 +135,14 @@ export default function TimerDisplayPage() {
     }
     if (prevLevelRef.current === level) return;
     prevLevelRef.current = level;
+
+    playLevelChangeAlert();
+
+    if (PAINEL_SEMPRE_VISIVEL) return;
     setShowPrizes(true);
     const timeout = setTimeout(() => setShowPrizes(false), PAINEL_VISIVEL_MS);
     return () => clearTimeout(timeout);
-  }, [state?.currentLevel]);
+  }, [state?.currentLevel, playLevelChangeAlert]);
 
   // Fallback: se não receber broadcast por 5s, decrementa localmente
   useEffect(() => {
@@ -467,6 +490,15 @@ export default function TimerDisplayPage() {
           >
             {isFullscreen ? "⛶ Sair" : "⛶ Tela cheia"}
           </button>
+
+          {!audioLiberado && (
+            <span
+              style={{ color: "#f59e0b", fontSize: "10px", marginLeft: "8px" }}
+              title="Clique em qualquer lugar da tela para liberar o som"
+            >
+              🔇 Som bloqueado
+            </span>
+          )}
         </div>
       </div>
 
