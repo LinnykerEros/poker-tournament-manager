@@ -22,8 +22,6 @@ export default function DashboardPage() {
   const [newName, setNewName] = useState("");
   const [showForm, setShowForm] = useState(false);
 
-  const hasActiveTournament = tournaments.some((t) => ["setup", "running", "paused"].includes(t.status));
-
   useEffect(() => {
     loadList();
   }, []);
@@ -43,10 +41,6 @@ export default function DashboardPage() {
   async function handleCreate() {
     const trimmed = newName.trim();
     if (!trimmed) return;
-    if (hasActiveTournament) {
-      alert("Finalize o torneio em andamento antes de criar um novo.");
-      return;
-    }
     try {
       setCreating(true);
       const newTournament = await createTournament(trimmed);
@@ -126,23 +120,19 @@ export default function DashboardPage() {
             🏆 RANKING
           </button>
           <button
-            onClick={() => !hasActiveTournament && setShowForm(!showForm)}
+            onClick={() => setShowForm(!showForm)}
             style={{
               padding: "10px 20px",
-              background: hasActiveTournament
-                ? "rgba(107,114,128,0.3)"
-                : "linear-gradient(135deg, #dc2626, #ef4444)",
-              color: hasActiveTournament ? "#6b7280" : "#ffffff",
+              background: "linear-gradient(135deg, #dc2626, #ef4444)",
+              color: "#ffffff",
               border: "none",
               borderRadius: "10px",
-              cursor: hasActiveTournament ? "not-allowed" : "pointer",
+              cursor: "pointer",
               fontWeight: 800,
               fontFamily: "'Fira Mono', monospace",
               fontSize: "12px",
               letterSpacing: "0.5px",
-              opacity: hasActiveTournament ? 0.6 : 1,
             }}
-            title={hasActiveTournament ? "Finalize o torneio ativo antes de criar outro" : ""}
           >
             + NOVO TORNEIO
           </button>

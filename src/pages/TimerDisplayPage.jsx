@@ -1,11 +1,29 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useTheme } from "../theme.jsx";
 import { useBroadcastReceiver } from "../hooks/useBroadcastChannel.js";
 import { supabase } from "../lib/supabase.js";
-import { calculateDriftedSeconds } from "../utils/tournamentHelpers.js";
-import { formatTime, formatChips } from "../utils/formatters.js";
+import {
+  calculateDriftedSeconds,
+  calculatePrizePool,
+  mapDbPlayerToLocal,
+} from "../utils/tournamentHelpers.js";
+import { formatTime, formatChips, formatMoney } from "../utils/formatters.js";
 import CardSuitBg from "../components/shared/CardSuitBg.jsx";
+
+// Premiação mínima garantida. O painel mostra este valor enquanto a
+// arrecadação real (buy-ins + add-ons + rebuys + startchips) estiver abaixo
+// dele; assim que a real ultrapassar, passa a mostrar a real.
+const PREMIACAO_GARANTIDA = 4000;
+
+// Quanto tempo o painel fica na tela após a virada de nível.
+const PAINEL_VISIVEL_MS = 4 * 60 * 1000;
+
+// Deixe true para manter o painel fixo na tela (útil para avaliar o visual).
+// Em false, ele aparece na virada de nível e some após PAINEL_VISIVEL_MS.
+const PAINEL_SEMPRE_VISIVEL = false;
+
+const MEDALHAS = ["🥇", "🥈", "🥉"];
 
 export default function TimerDisplayPage() {
   const { id } = useParams();
@@ -14,6 +32,8 @@ export default function TimerDisplayPage() {
   const [state, setState] = useState(null);
   const [loading, setLoading] = useState(true);
   const [connected, setConnected] = useState(false);
+  const [showPrizes, setShowPrizes] = useState(PAINEL_SEMPRE_VISIVEL);
+  const prevLevelRef = useRef(null);
 
   useEffect(() => {
     loadInitial();
@@ -21,29 +41,37 @@ export default function TimerDisplayPage() {
 
   async function loadInitial() {
     try {
-      const { data, error } = await supabase
-        .from("tournaments")
-        .select("*")
-        .eq("id", id)
-        .single();
-      if (error) throw error;
+      const [tRes, pRes] = await Promise.all([
+        supabase.from("tournaments").select("*").eq("id", id).single(),
+        supabase.from("tournament_players").select("*").eq("tournament_id", id),
+      ]);
+      if (tRes.error) throw tRes.error;
 
+      const data = tRes.data;
       const correctedSeconds = calculateDriftedSeconds(
         data.seconds_left,
         data.timer_running,
         data.timer_updated_at
       );
 
+      // Calcula o pool aqui também, para a TV mostrar o valor certo mesmo
+      // sem a aba do organizador aberta mandando broadcast.
+      const localPlayers = (pRes.data || []).map(mapDbPlayerToLocal);
+      const active = localPlayers.filter((p) => !p.eliminated);
+      const totalChips = localPlayers.reduce((s, p) => s + (p.stack || 0), 0);
+
       setState({
         name: data.name,
         blinds: data.blinds,
+        prizeStructure: data.prize_structure,
+        prizePool: calculatePrizePool(localPlayers, data.config),
         currentLevel: data.current_level,
         secondsLeft: correctedSeconds,
         running: data.timer_running,
         config: data.config,
-        playerCount: 0,
-        avgStack: 0,
-        totalChips: 0,
+        playerCount: active.length,
+        avgStack: active.length ? Math.round(totalChips / active.length) : 0,
+        totalChips,
       });
     } catch (e) {
       console.error("Erro ao carregar torneio:", e.message);
@@ -58,6 +86,23 @@ export default function TimerDisplayPage() {
   }, []);
 
   useBroadcastReceiver(id, onMessage);
+
+  // Mostra a premiação a cada virada de nível e esconde após 4 min.
+  // Só dispara em mudança real de nível — não aparece ao abrir a tela.
+  useEffect(() => {
+    if (PAINEL_SEMPRE_VISIVEL) return;
+    const level = state?.currentLevel;
+    if (level == null) return;
+    if (prevLevelRef.current === null) {
+      prevLevelRef.current = level;
+      return;
+    }
+    if (prevLevelRef.current === level) return;
+    prevLevelRef.current = level;
+    setShowPrizes(true);
+    const timeout = setTimeout(() => setShowPrizes(false), PAINEL_VISIVEL_MS);
+    return () => clearTimeout(timeout);
+  }, [state?.currentLevel]);
 
   // Fallback: se não receber broadcast por 5s, decrementa localmente
   useEffect(() => {
@@ -106,6 +151,11 @@ export default function TimerDisplayPage() {
       </div>
     );
   }
+
+  // Enquanto a arrecadação real não passar o garantido, vale o garantido.
+  const premiacaoReal = state.prizePool || 0;
+  const premiacaoExibida = Math.max(PREMIACAO_GARANTIDA, premiacaoReal);
+  const noGarantido = premiacaoReal <= PREMIACAO_GARANTIDA;
 
   const current = state.blinds?.[state.currentLevel];
   const next = state.blinds?.[state.currentLevel + 1];
@@ -278,8 +328,97 @@ export default function TimerDisplayPage() {
           </>
         )}
 
+        {/* Premiação — aparece na virada de nível e some após 4 min */}
+        {state.prizeStructure?.length > 0 && (
+          <div
+            style={{
+              position: "fixed",
+              top: "16px",
+              right: "16px",
+              width: "clamp(290px, 28vw, 400px)",
+              background: "rgba(18,18,22,0.94)",
+              border: "1px solid rgba(220,38,38,0.35)",
+              borderRadius: "16px",
+              padding: "18px 22px 16px",
+              backdropFilter: "blur(10px)",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+              textAlign: "left",
+              opacity: showPrizes ? 1 : 0,
+              transform: showPrizes ? "translateY(0)" : "translateY(-12px)",
+              transition: "opacity 0.7s ease, transform 0.7s ease",
+              pointerEvents: "none",
+              zIndex: 5,
+            }}
+          >
+            <div
+              style={{
+                color: "#fbbf24",
+                fontSize: "13px",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "1.5px",
+                marginBottom: "12px",
+              }}
+            >
+              🏆 Premiação
+            </div>
+
+            <div
+              style={{
+                textAlign: "center",
+                paddingBottom: "12px",
+                marginBottom: "12px",
+                borderBottom: "1px solid rgba(220,38,38,0.2)",
+              }}
+            >
+              <div style={{ color: t.textMuted, fontSize: "10px", letterSpacing: "1.5px", textTransform: "uppercase" }}>
+                Valor Total
+              </div>
+              <div style={{ color: "#dc2626", fontSize: "34px", fontWeight: 900, lineHeight: 1.2 }}>
+                {formatMoney(premiacaoExibida)}
+              </div>
+              {noGarantido && (
+                <div style={{ color: t.textMuted, fontSize: "9px", letterSpacing: "1px", textTransform: "uppercase" }}>
+                  Garantido
+                </div>
+              )}
+            </div>
+
+            {state.prizeStructure.slice(0, 5).map((p, i) => (
+              <div
+                key={p.place ?? i}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "10px",
+                  padding: "7px 0",
+                }}
+              >
+                <span style={{ fontSize: "18px", width: "32px", flexShrink: 0 }}>
+                  {MEDALHAS[i] || `${i + 1}º`}
+                </span>
+                <span style={{ color: t.textMuted, fontSize: "13px", flexShrink: 0 }}>
+                  {p.percent}%
+                </span>
+                <span
+                  style={{
+                    color: "#22c55e",
+                    fontSize: "19px",
+                    fontWeight: 800,
+                    marginLeft: "auto",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {formatMoney((premiacaoExibida * p.percent) / 100)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Connection indicator */}
-        <div style={{ position: "fixed", top: "12px", right: "16px", display: "flex", alignItems: "center", gap: "6px" }}>
+        <div style={{ position: "fixed", top: "12px", left: "16px", display: "flex", alignItems: "center", gap: "6px" }}>
           <div
             style={{
               width: "8px",

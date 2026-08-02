@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "../theme.jsx";
 import { useTournamentContext } from "../contexts/TournamentContext.jsx";
 import { useBroadcastSender } from "../hooks/useBroadcastChannel.js";
+import { nextBlindLevel } from "../utils/blindProgression.js";
+import { calculatePrizePool } from "../utils/tournamentHelpers.js";
 import CardSuitBg from "./shared/CardSuitBg.jsx";
 import TabBtn from "./shared/TabBtn.jsx";
 import TimerTab from "./tabs/TimerTab.jsx";
@@ -66,12 +68,14 @@ export default function PokerTournament() {
       secondsLeft,
       running,
       blinds,
+      prizeStructure,
+      prizePool: calculatePrizePool(players, config),
       playerCount: activePlayers.length,
       avgStack,
       totalChips,
       name: tournament.name,
     });
-  }, [secondsLeft, currentLevel, running, players, blinds, tournament, broadcast]);
+  }, [secondsLeft, currentLevel, running, players, blinds, prizeStructure, config, tournament, broadcast]);
 
   const audioCtx = useRef(null);
   const getAudioCtx = useCallback(() => {
@@ -107,6 +111,23 @@ export default function PokerTournament() {
       1200
     );
   }, [playBeep]);
+
+  // Gera o próximo nível automaticamente ao passar da metade do último nível,
+  // para o torneio não travar se ainda estiver rolando. Só age em torneios com
+  // config.autoExtendBlinds ligado.
+  //
+  // Continua preso a isOrganizer de propósito, e não a canEdit: precisa de um
+  // escritor único. Com todo mundo editando, cada aba aberta gravaria seu
+  // próprio nível ao cruzar a metade e a estrutura ganharia níveis duplicados.
+  useEffect(() => {
+    if (!running || !isOrganizer) return;
+    if (!config.autoExtendBlinds) return;
+    if (currentLevel !== blinds.length - 1) return;
+    const current = blinds[currentLevel];
+    if (!current || current.isBreak) return;
+    if (secondsLeft > (current.duration * 60) / 2) return;
+    setBlinds((prev) => [...prev, nextBlindLevel(prev)]);
+  }, [running, isOrganizer, config.autoExtendBlinds, currentLevel, secondsLeft, blinds, setBlinds]);
 
   useEffect(() => {
     if (!running) return;

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTheme } from "../../theme.jsx";
 import NumInput from "../shared/NumInput.jsx";
+import { nextBlindLevel } from "../../utils/blindProgression.js";
 import { goldBtn, thStyle, tdStyle } from "../../styles/shared.js";
 
 export default function BlindsTab({ blinds, setBlinds, readOnly = false }) {
@@ -8,43 +9,7 @@ export default function BlindsTab({ blinds, setBlinds, readOnly = false }) {
   const [dragIdx, setDragIdx] = useState(null);
   const [dragOverIdx, setDragOverIdx] = useState(null);
 
-  const addLevel = () => {
-    const levels = blinds.filter((b) => !b.isBreak);
-    const len = levels.length;
-    if (len >= 2) {
-      const prev2 = levels[len - 2];
-      const prev1 = levels[len - 1];
-      const smallRatio = prev2.small > 0 ? prev1.small / prev2.small : 2;
-      const bigRatio = prev2.big > 0 ? prev1.big / prev2.big : 2;
-      const newSmall = Math.round((prev1.small * smallRatio) / 25) * 25 || prev1.small * 2;
-      const newBig = Math.round((prev1.big * bigRatio) / 25) * 25 || prev1.big * 2;
-      const anteRatio = prev2.ante > 0 && prev1.ante > 0 ? prev1.ante / prev2.ante : 0;
-      const newAnte =
-        prev1.ante > 0
-          ? anteRatio > 0
-            ? Math.round((prev1.ante * anteRatio) / 25) * 25
-            : Math.round((prev1.ante * 1.5) / 25) * 25
-          : Math.round((newBig * 0.1) / 25) * 25;
-      setBlinds((prev) => [
-        ...prev,
-        { level: len + 1, small: newSmall, big: newBig, ante: newAnte, duration: prev1.duration },
-      ]);
-    } else if (len === 1) {
-      const prev1 = levels[0];
-      setBlinds((prev) => [
-        ...prev,
-        {
-          level: 2,
-          small: prev1.small * 2,
-          big: prev1.big * 2,
-          ante: Math.round((prev1.big * 2 * 0.1) / 25) * 25,
-          duration: prev1.duration,
-        },
-      ]);
-    } else {
-      setBlinds((prev) => [...prev, { level: 1, small: 25, big: 50, ante: 0, duration: 20 }]);
-    }
-  };
+  const addLevel = () => setBlinds((prev) => [...prev, nextBlindLevel(prev)]);
 
   const removeLevel = (i) =>
     setBlinds((prev) => {

@@ -1,9 +1,11 @@
+// Espera jogadores no formato local (mapDbPlayerToLocal).
 export function calculatePrizePool(players, config) {
-  const totalBuyIns = players.length * config.buyIn;
-  const totalAddOns = players.reduce((s, p) => s + p.add_ons, 0) * config.addOnCost;
-  const totalRebuys = players.reduce((s, p) => s + p.rebuys, 0) * config.rebuyCost;
+  if (!players?.length || !config) return 0;
+  const totalBuyIns = players.length * (config.buyIn || 0);
+  const totalAddOns = players.reduce((s, p) => s + (p.addOns || 0), 0) * (config.addOnCost || 0);
+  const totalRebuys = players.reduce((s, p) => s + (p.rebuys || 0), 0) * (config.rebuyCost || 0);
   const totalStartChips =
-    players.filter((p) => p.has_start_chip).length * (config.startChipCost || 0);
+    players.filter((p) => p.hasStartChip).length * (config.startChipCost || 0);
   return totalBuyIns + totalAddOns + totalRebuys + totalStartChips;
 }
 
