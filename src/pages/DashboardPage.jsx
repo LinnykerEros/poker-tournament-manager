@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../theme.jsx";
-import { useAuth } from "../contexts/AuthContext.jsx";
 import { useTournament } from "../hooks/useTournament.js";
 
 const statusLabels = {
@@ -13,7 +12,6 @@ const statusLabels = {
 
 export default function DashboardPage() {
   const { t } = useTheme();
-  const { session } = useAuth();
   const navigate = useNavigate();
   const { listTournaments, createTournament, deleteTournament } = useTournament();
   const [tournaments, setTournaments] = useState([]);
@@ -21,6 +19,8 @@ export default function DashboardPage() {
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     loadList();
@@ -54,14 +54,30 @@ export default function DashboardPage() {
     }
   }
 
-  async function handleDelete(id, e) {
+  async function handleDelete(tour, e) {
     e.stopPropagation();
-    if (!confirm("Excluir este torneio?")) return;
+
+    // Só finalizado é excluível — e finalizado é justamente o que o ranking
+    // mensal lê, então a exclusão sempre tira o torneio de lá.
+    if (
+      !confirm(
+        `Excluir "${tour.name}"?\n\n` +
+          `Os jogadores deste torneio serão apagados junto e ele sairá do ranking mensal.\n\n` +
+          `Esta ação não pode ser desfeita.`
+      )
+    )
+      return;
+
     try {
-      await deleteTournament(id);
-      setTournaments((prev) => prev.filter((t) => t.id !== id));
+      setDeletingId(tour.id);
+      setDeleteError("");
+      await deleteTournament(tour.id);
+      setTournaments((prev) => prev.filter((item) => item.id !== tour.id));
     } catch (err) {
       console.error("Erro ao excluir:", err.message);
+      setDeleteError(`Não foi possível excluir "${tour.name}": ${err.message}`);
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -192,6 +208,23 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {deleteError && (
+        <div
+          style={{
+            background: "rgba(239,68,68,0.12)",
+            border: "1px solid rgba(239,68,68,0.4)",
+            borderRadius: "10px",
+            padding: "12px 16px",
+            marginBottom: "16px",
+            color: "#ef4444",
+            fontFamily: "'Fira Mono', monospace",
+            fontSize: "12px",
+          }}
+        >
+          {deleteError}
+        </div>
+      )}
+
       {loading ? (
         <div style={{ textAlign: "center", padding: "48px 0", color: t.textMuted }}>
           Carregando...
@@ -266,21 +299,36 @@ export default function DashboardPage() {
                     <span style={{ color: st.color, fontWeight: 700 }}>{st.text}</span>
                   </div>
                 </div>
-                {tour.status === "setup" && tour.organizer_id === session?.user?.id && (
+                {tour.status === "finished" && (
                   <button
-                    onClick={(e) => handleDelete(tour.id, e)}
+                    onClick={(e) => handleDelete(tour, e)}
+                    disabled={deletingId === tour.id}
                     style={{
-                      background: "none",
-                      border: "none",
+                      background: "transparent",
+                      border: `1px solid ${t.border}`,
+                      borderRadius: "8px",
                       color: "#ef4444",
-                      cursor: "pointer",
-                      fontSize: "16px",
-                      padding: "4px 8px",
-                      opacity: 0.6,
+                      cursor: deletingId === tour.id ? "default" : "pointer",
+                      fontSize: "14px",
+                      lineHeight: 1,
+                      padding: "8px 10px",
+                      flexShrink: 0,
+                      opacity: deletingId === tour.id ? 0.4 : 0.75,
+                      transition: "opacity 0.2s, border-color 0.2s",
                     }}
-                    title="Excluir torneio"
+                    onMouseEnter={(e) => {
+                      if (deletingId === tour.id) return;
+                      e.currentTarget.style.opacity = "1";
+                      e.currentTarget.style.borderColor = "#ef4444";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (deletingId === tour.id) return;
+                      e.currentTarget.style.opacity = "0.75";
+                      e.currentTarget.style.borderColor = t.border;
+                    }}
+                    title={`Excluir "${tour.name}"`}
                   >
-                    ✕
+                    {deletingId === tour.id ? "..." : "🗑"}
                   </button>
                 )}
               </div>
