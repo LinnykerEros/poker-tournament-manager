@@ -4,12 +4,13 @@ import { formatChips, formatMoney } from "../../utils/formatters.js";
 
 export default function RankingTab({ players, config, prizeStructure }) {
   const { t } = useTheme();
-  const totalBuyIns = players.length * config.buyIn;
+  const regularPlayers = players.filter((p) => !p.isDoubleBuyIn).length;
+  const doublePlayers = players.filter((p) => p.isDoubleBuyIn).length;
+  const totalBuyIns = regularPlayers * config.buyIn + doublePlayers * (config.doubleBuyInCost || config.buyIn * 2);
   const totalAddOns = players.reduce((s, p) => s + p.addOns, 0) * config.addOnCost;
   const totalRebuys = players.reduce((s, p) => s + p.rebuys, 0) * config.rebuyCost;
-  const totalStartChips =
-    players.filter((p) => p.hasStartChip).length * (config.startChipCost || 0);
-  const totalPrizePool = totalBuyIns + totalAddOns + totalRebuys + totalStartChips;
+  const totalDoubleRebuys = players.reduce((s, p) => s + (p.doubleRebuys || 0), 0) * (config.doubleRebuyCost || config.rebuyCost * 2);
+  const totalPrizePool = totalBuyIns + totalAddOns + totalRebuys + totalDoubleRebuys;
 
   const eliminated = players.filter((p) => p.eliminated).sort((a, b) => a.place - b.place);
   const active = players.filter((p) => !p.eliminated);

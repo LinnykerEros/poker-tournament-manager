@@ -3,7 +3,7 @@ import MiniBtn from "./MiniBtn.jsx";
 import { PLACE_MEDALS } from "../../utils/constants.js";
 import { formatChips } from "../../utils/formatters.js";
 
-export default function PlayerCard({ player, onRemove, onEliminate, onAddOn, onRebuy, onStartChip, canBuyStartChip = false, eliminated, readOnly = false }) {
+export default function PlayerCard({ player, onRemove, onEliminate, onAddOn, onRebuy, onDoubleRebuy, onDoubleBuyIn, eliminated, readOnly = false }) {
   const { t } = useTheme();
   return (
     <div
@@ -67,9 +67,14 @@ export default function PlayerCard({ player, onRemove, onEliminate, onAddOn, onR
               +{player.rebuys} rebuy
             </span>
           )}
-          {player.hasStartChip && (
+          {player.isDoubleBuyIn && (
             <span style={{ color: "#fbbf24", fontSize: "11px", fontFamily: "'Fira Mono', monospace" }}>
-              🎰 startchip
+              🎫🎫 buy-in duplo
+            </span>
+          )}
+          {player.doubleRebuys > 0 && (
+            <span style={{ color: "#e879f9", fontSize: "11px", fontFamily: "'Fira Mono', monospace" }}>
+              +{player.doubleRebuys} rebuy duplo
             </span>
           )}
           {player.place && (
@@ -93,10 +98,11 @@ export default function PlayerCard({ player, onRemove, onEliminate, onAddOn, onR
               {player.addOns < 1 && (
                 <MiniBtn label="Add-on" color="#60a5fa" onClick={() => onAddOn(player.id)} />
               )}
-              <MiniBtn label="Rebuy" color="#a78bfa" onClick={() => onRebuy(player.id)} />
-              {canBuyStartChip && !player.hasStartChip && (
-                <MiniBtn label="StartChip" color="#fbbf24" onClick={() => onStartChip(player.id)} />
+              {!player.isDoubleBuyIn && (
+                <MiniBtn label="Buy-in 2x" color="#fbbf24" onClick={() => onDoubleBuyIn(player.id)} />
               )}
+              <MiniBtn label="Rebuy" color="#a78bfa" onClick={() => onRebuy(player.id)} />
+              <MiniBtn label="Rebuy 2x" color="#e879f9" onClick={() => onDoubleRebuy(player.id)} />
             </>
           )}
           <MiniBtn

@@ -17,11 +17,13 @@ export function useTournament() {
       startingStack: 10000,
       addOnChips: 5000,
       rebuyChips: 10000,
-      startChipChips: 5000,
+      doubleRebuyChips: 20000,
+      doubleBuyInChips: 20000,
+      buyIn: 50,
+      doubleBuyInCost: 100,
       addOnCost: 20,
       rebuyCost: 30,
-      startChipCost: 25,
-      buyIn: 50,
+      doubleRebuyCost: 60,
       autoExtendBlinds: true,
     };
     const { data, error } = await supabase

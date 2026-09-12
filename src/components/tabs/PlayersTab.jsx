@@ -16,9 +16,6 @@ export default function PlayersTab({ readOnly = false }) {
     updatePlayerInTournament,
   } = useTournamentContext();
 
-  // StartChip só pode ser comprado na entrada, enquanto o torneio não iniciou
-  const tournamentStarted =
-    !!tournament?.started_at || (tournament?.status && tournament.status !== "setup");
   const { listProfiles } = useTournament();
 
   const [name, setName] = useState("");
@@ -103,13 +100,22 @@ export default function PlayersTab({ readOnly = false }) {
     });
   };
 
-  const buyStartChip = async (id) => {
-    if (tournamentStarted) return;
+  const doubleBuyIn = async (id) => {
     const p = players.find((pl) => pl.id === id);
-    if (!p || p.hasStartChip) return;
+    if (!p || p.isDoubleBuyIn) return;
+    const extraChips = (config.doubleBuyInChips || config.startingStack * 2) - config.startingStack;
     await updatePlayerInTournament(id, {
-      hasStartChip: true,
-      stack: p.stack + (config.startChipChips || 0),
+      isDoubleBuyIn: true,
+      stack: p.stack + extraChips,
+    });
+  };
+
+  const doubleRebuy = async (id) => {
+    const p = players.find((pl) => pl.id === id);
+    if (!p) return;
+    await updatePlayerInTournament(id, {
+      doubleRebuys: (p.doubleRebuys || 0) + 1,
+      stack: p.stack + (config.doubleRebuyChips || config.rebuyChips * 2),
     });
   };
 
@@ -337,8 +343,8 @@ export default function PlayersTab({ readOnly = false }) {
             onEliminate={toggleEliminated}
             onAddOn={addOn}
             onRebuy={rebuy}
-            onStartChip={buyStartChip}
-            canBuyStartChip={!tournamentStarted}
+            onDoubleBuyIn={doubleBuyIn}
+            onDoubleRebuy={doubleRebuy}
             readOnly={readOnly}
           />
         ))}
@@ -364,8 +370,8 @@ export default function PlayersTab({ readOnly = false }) {
                 onEliminate={toggleEliminated}
                 onAddOn={addOn}
                 onRebuy={rebuy}
-                onStartChip={buyStartChip}
-                canBuyStartChip={!tournamentStarted}
+                onDoubleBuyIn={doubleBuyIn}
+            onDoubleRebuy={doubleRebuy}
                 eliminated
                 readOnly={readOnly}
               />
