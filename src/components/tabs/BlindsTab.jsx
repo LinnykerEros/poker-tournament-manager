@@ -2,14 +2,23 @@ import { useState } from "react";
 import { useTheme } from "../../theme.jsx";
 import NumInput from "../shared/NumInput.jsx";
 import { nextBlindLevel } from "../../utils/blindProgression.js";
+import { BLIND_PRESETS } from "../../utils/constants.js";
 import { goldBtn, thStyle, tdStyle } from "../../styles/shared.js";
 
 export default function BlindsTab({ blinds, setBlinds, readOnly = false }) {
   const { t } = useTheme();
   const [dragIdx, setDragIdx] = useState(null);
   const [dragOverIdx, setDragOverIdx] = useState(null);
+  const [showPresets, setShowPresets] = useState(false);
 
   const addLevel = () => setBlinds((prev) => [...prev, nextBlindLevel(prev)]);
+
+  const applyPreset = (key) => {
+    const preset = BLIND_PRESETS.find((p) => p.key === key);
+    if (!preset) return;
+    if (!confirm(`Substituir todos os blinds pelo preset "${preset.label}"?`)) return;
+    setBlinds(preset.blinds.map((b) => ({ ...b })));
+  };
 
   const removeLevel = (i) =>
     setBlinds((prev) => {
@@ -64,7 +73,7 @@ export default function BlindsTab({ blinds, setBlinds, readOnly = false }) {
   return (
     <div>
       {!readOnly && (
-        <div style={{ display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap", alignItems: "center" }}>
           <button onClick={addLevel} style={goldBtn}>
             + NÍVEL
           </button>
@@ -79,6 +88,63 @@ export default function BlindsTab({ blinds, setBlinds, readOnly = false }) {
           >
             ☕ INTERVALO
           </button>
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => setShowPresets((v) => !v)}
+              style={{
+                ...goldBtn,
+                background: "rgba(220,38,38,0.10)",
+                color: "#dc2626",
+                border: "1px solid rgba(220,38,38,0.3)",
+              }}
+            >
+              PRESET ▾
+            </button>
+            {showPresets && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "calc(100% + 6px)",
+                  left: 0,
+                  zIndex: 50,
+                  minWidth: "160px",
+                  background: t.containerBg,
+                  border: `1px solid ${t.border}`,
+                  borderRadius: "10px",
+                  overflow: "hidden",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+                }}
+              >
+                {BLIND_PRESETS.map((p) => (
+                  <button
+                    key={p.key}
+                    onClick={() => {
+                      setShowPresets(false);
+                      applyPreset(p.key);
+                    }}
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      padding: "10px 16px",
+                      background: "transparent",
+                      border: "none",
+                      color: t.text,
+                      fontFamily: "'Fira Mono', monospace",
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      textAlign: "left",
+                      borderBottom: `1px solid ${t.border}`,
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(220,38,38,0.1)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
       <div style={{ overflowX: "auto" }}>

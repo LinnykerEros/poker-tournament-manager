@@ -22,6 +22,7 @@ export function useTournament() {
       rebuyCost: 30,
       startChipCost: 25,
       buyIn: 50,
+      autoExtendBlinds: true,
     };
     const { data, error } = await supabase
       .from("tournaments")

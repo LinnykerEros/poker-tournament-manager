@@ -17,12 +17,13 @@ import CardSuitBg from "../components/shared/CardSuitBg.jsx";
 // dele; assim que a real ultrapassar, passa a mostrar a real.
 const PREMIACAO_GARANTIDA = 4000;
 
+
 // Quanto tempo o painel fica na tela após a virada de nível.
 const PAINEL_VISIVEL_MS = 4 * 60 * 1000;
 
 // Deixe true para manter o painel fixo na tela (útil para avaliar o visual).
 // Em false, ele aparece na virada de nível e some após PAINEL_VISIVEL_MS.
-const PAINEL_SEMPRE_VISIVEL = false;
+const PAINEL_SEMPRE_VISIVEL = true;
 
 const MEDALHAS = ["🥇", "🥈", "🥉"];
 
@@ -368,94 +369,69 @@ export default function TimerDisplayPage() {
           </>
         )}
 
-        {/* Premiação — aparece na virada de nível e some após 4 min */}
-        {state.prizeStructure?.length > 0 && (
+        {/* Premiação fixa — satélite */}
+        <div
+          style={{
+            position: "fixed",
+            top: "16px",
+            right: "16px",
+            width: "clamp(290px, 28vw, 400px)",
+            background: "rgba(18,18,22,0.94)",
+            border: "1px solid rgba(220,38,38,0.35)",
+            borderRadius: "16px",
+            padding: "18px 22px 16px",
+            backdropFilter: "blur(10px)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+            textAlign: "left",
+            opacity: showPrizes ? 1 : 0,
+            transform: showPrizes ? "translateY(0)" : "translateY(-12px)",
+            transition: "opacity 0.7s ease, transform 0.7s ease",
+            pointerEvents: "none",
+            zIndex: 5,
+          }}
+        >
           <div
             style={{
-              position: "fixed",
-              top: "16px",
-              right: "16px",
-              width: "clamp(290px, 28vw, 400px)",
-              background: "rgba(18,18,22,0.94)",
-              border: "1px solid rgba(220,38,38,0.35)",
-              borderRadius: "16px",
-              padding: "18px 22px 16px",
-              backdropFilter: "blur(10px)",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
-              textAlign: "left",
-              opacity: showPrizes ? 1 : 0,
-              transform: showPrizes ? "translateY(0)" : "translateY(-12px)",
-              transition: "opacity 0.7s ease, transform 0.7s ease",
-              pointerEvents: "none",
-              zIndex: 5,
+              color: "#fbbf24",
+              fontSize: "13px",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "1.5px",
+              marginBottom: "16px",
             }}
           >
+            🏆 Premiação
+          </div>
+
+          {[
+            { place: "🥇", prize: "1 Vaga Torneio Shark ou R$ 300" },
+            { place: "🥈", prize: "1 Vaga Torneio Shark ou R$ 300" },
+          ].map((p, i) => (
             <div
+              key={i}
               style={{
-                color: "#fbbf24",
-                fontSize: "13px",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "1.5px",
-                marginBottom: "12px",
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: "10px 0",
+                borderBottom: i === 0 ? "1px solid rgba(220,38,38,0.15)" : "none",
               }}
             >
-              🏆 Premiação
-            </div>
-
-            <div
-              style={{
-                textAlign: "center",
-                paddingBottom: "12px",
-                marginBottom: "12px",
-                borderBottom: "1px solid rgba(220,38,38,0.2)",
-              }}
-            >
-              <div style={{ color: t.textMuted, fontSize: "10px", letterSpacing: "1.5px", textTransform: "uppercase" }}>
-                Valor Total
-              </div>
-              <div style={{ color: "#dc2626", fontSize: "34px", fontWeight: 900, lineHeight: 1.2 }}>
-                {formatMoney(premiacaoExibida)}
-              </div>
-              {noGarantido && (
-                <div style={{ color: t.textMuted, fontSize: "9px", letterSpacing: "1px", textTransform: "uppercase" }}>
-                  Garantido
-                </div>
-              )}
-            </div>
-
-            {state.prizeStructure.slice(0, 5).map((p, i) => (
-              <div
-                key={p.place ?? i}
+              <span style={{ fontSize: "22px", width: "36px", flexShrink: 0 }}>
+                {p.place}
+              </span>
+              <span
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: "10px",
-                  padding: "7px 0",
+                  color: "#22c55e",
+                  fontSize: "19px",
+                  fontWeight: 800,
                 }}
               >
-                <span style={{ fontSize: "18px", width: "32px", flexShrink: 0 }}>
-                  {MEDALHAS[i] || `${i + 1}º`}
-                </span>
-                <span style={{ color: t.textMuted, fontSize: "13px", flexShrink: 0 }}>
-                  {p.percent}%
-                </span>
-                <span
-                  style={{
-                    color: "#22c55e",
-                    fontSize: "19px",
-                    fontWeight: 800,
-                    marginLeft: "auto",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {formatMoney((premiacaoExibida * p.percent) / 100)}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
+                {p.prize}
+              </span>
+            </div>
+          ))}
+        </div>
 
         {/* Connection indicator */}
         <div style={{ position: "fixed", top: "12px", left: "16px", display: "flex", alignItems: "center", gap: "6px" }}>
