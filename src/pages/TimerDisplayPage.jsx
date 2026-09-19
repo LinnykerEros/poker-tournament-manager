@@ -6,26 +6,11 @@ import { useTimerSounds } from "../hooks/useTimerSounds.js";
 import { supabase } from "../lib/supabase.js";
 import {
   calculateDriftedSeconds,
-  calculatePrizePool,
   mapDbPlayerToLocal,
 } from "../utils/tournamentHelpers.js";
-import { formatTime, formatChips, formatMoney } from "../utils/formatters.js";
+import { formatTime, formatChips } from "../utils/formatters.js";
 import CardSuitBg from "../components/shared/CardSuitBg.jsx";
 
-// Premiação mínima garantida. O painel mostra este valor enquanto a
-// arrecadação real (buy-ins + add-ons + rebuys + startchips) estiver abaixo
-// dele; assim que a real ultrapassar, passa a mostrar a real.
-const PREMIACAO_GARANTIDA = 4000;
-
-
-// Quanto tempo o painel fica na tela após a virada de nível.
-const PAINEL_VISIVEL_MS = 4 * 60 * 1000;
-
-// Deixe true para manter o painel fixo na tela (útil para avaliar o visual).
-// Em false, ele aparece na virada de nível e some após PAINEL_VISIVEL_MS.
-const PAINEL_SEMPRE_VISIVEL = true;
-
-const MEDALHAS = ["🥇", "🥈", "🥉"];
 
 export default function TimerDisplayPage() {
   const { id } = useParams();
@@ -34,7 +19,6 @@ export default function TimerDisplayPage() {
   const [state, setState] = useState(null);
   const [loading, setLoading] = useState(true);
   const [connected, setConnected] = useState(false);
-  const [showPrizes, setShowPrizes] = useState(PAINEL_SEMPRE_VISIVEL);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [audioLiberado, setAudioLiberado] = useState(false);
   const prevLevelRef = useRef(null);
@@ -101,8 +85,6 @@ export default function TimerDisplayPage() {
       setState({
         name: data.name,
         blinds: data.blinds,
-        prizeStructure: data.prize_structure,
-        prizePool: calculatePrizePool(localPlayers, data.config),
         currentLevel: data.current_level,
         secondsLeft: correctedSeconds,
         running: data.timer_running,
@@ -125,7 +107,7 @@ export default function TimerDisplayPage() {
 
   useBroadcastReceiver(id, onMessage);
 
-  // Na virada de nível: toca o alerta e mostra a premiação por 4 min.
+  // Na virada de nível: toca o alerta sonoro.
   // Só dispara em mudança real de nível — não acontece ao abrir a tela.
   useEffect(() => {
     const level = state?.currentLevel;
@@ -138,11 +120,6 @@ export default function TimerDisplayPage() {
     prevLevelRef.current = level;
 
     playLevelChangeAlert();
-
-    if (PAINEL_SEMPRE_VISIVEL) return;
-    setShowPrizes(true);
-    const timeout = setTimeout(() => setShowPrizes(false), PAINEL_VISIVEL_MS);
-    return () => clearTimeout(timeout);
   }, [state?.currentLevel, playLevelChangeAlert]);
 
   // Fallback: se não receber broadcast por 5s, decrementa localmente
@@ -192,11 +169,6 @@ export default function TimerDisplayPage() {
       </div>
     );
   }
-
-  // Enquanto a arrecadação real não passar o garantido, vale o garantido.
-  const premiacaoReal = state.prizePool || 0;
-  const premiacaoExibida = Math.max(PREMIACAO_GARANTIDA, premiacaoReal);
-  const noGarantido = premiacaoReal <= PREMIACAO_GARANTIDA;
 
   const current = state.blinds?.[state.currentLevel];
   const next = state.blinds?.[state.currentLevel + 1];
@@ -368,70 +340,6 @@ export default function TimerDisplayPage() {
             </div>
           </>
         )}
-
-        {/* Premiação fixa — satélite */}
-        <div
-          style={{
-            position: "fixed",
-            top: "16px",
-            right: "16px",
-            width: "clamp(290px, 28vw, 400px)",
-            background: "rgba(18,18,22,0.94)",
-            border: "1px solid rgba(220,38,38,0.35)",
-            borderRadius: "16px",
-            padding: "18px 22px 16px",
-            backdropFilter: "blur(10px)",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
-            textAlign: "left",
-            opacity: showPrizes ? 1 : 0,
-            transform: showPrizes ? "translateY(0)" : "translateY(-12px)",
-            transition: "opacity 0.7s ease, transform 0.7s ease",
-            pointerEvents: "none",
-            zIndex: 5,
-          }}
-        >
-          <div
-            style={{
-              color: "#fbbf24",
-              fontSize: "13px",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "1.5px",
-              marginBottom: "16px",
-            }}
-          >
-            🏆 Premiação
-          </div>
-
-          {[
-            { place: "🥇", prize: "1 Vaga Torneio Shark ou R$ 300" },
-            { place: "🥈", prize: "1 Vaga Torneio Shark ou R$ 300" },
-          ].map((p, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                padding: "10px 0",
-                borderBottom: i === 0 ? "1px solid rgba(220,38,38,0.15)" : "none",
-              }}
-            >
-              <span style={{ fontSize: "22px", width: "36px", flexShrink: 0 }}>
-                {p.place}
-              </span>
-              <span
-                style={{
-                  color: "#22c55e",
-                  fontSize: "19px",
-                  fontWeight: 800,
-                }}
-              >
-                {p.prize}
-              </span>
-            </div>
-          ))}
-        </div>
 
         {/* Connection indicator */}
         <div style={{ position: "fixed", top: "12px", left: "16px", display: "flex", alignItems: "center", gap: "6px" }}>
